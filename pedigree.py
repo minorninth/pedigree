@@ -1,6 +1,7 @@
 #!python
 
 DBG = 1 # stack trace
+VERBOSE = False
 
 TEST_PLOTTING = 0
 
@@ -55,6 +56,7 @@ New people are always created after the current person.\r
 Press M for male, F for female, B for a pregnancy loss,\r
 and shift-U for an unknown gender.\r
 Press a number key 2-9 to put a number to represent multiple people.\r
+Press 0 for a nonexistent person or child.\r
 Press shift-N to put an n to represent n people.\r
 Note that when counting the number of people, n people is counted as 10.\r
 
@@ -100,6 +102,10 @@ def out(str):
     except:
       pass
 
+def verbose(str):
+  if VERBOSE:
+    out(str)
+
 def out1(str):
   if g_connection:
     g_connection.send(str)
@@ -134,7 +140,6 @@ def smart_eps2pdf(infilename, outfilename):
   tmpfilename = "tmp.eps"
   tmpf = open(tmpfilename, "w")
 
-  verbose = False
   header = True
   bbox = None
   for i in range(len(in_lines)):
@@ -148,14 +153,14 @@ def smart_eps2pdf(infilename, outfilename):
       # this means it will appear in the proper place when we set
       # the PDF paper size smaller...
       tmpf.write("%d %d translate\n" % (-bbox[0], -bbox[1]))
-      if verbose:
+      if VERBOSE:
         out("%d %d translate" % (-bbox[0], -bbox[1]))
     if header:
       if line[:14]=='%%BoundingBox:':
         bbox = map(int, line[14:].strip().split())
-        if verbose:
+        if VERBOSE:
           out("Got bounding box: %s" % str(bbox))
-    if verbose:
+    if VERBOSE:
       sys.stdout.write(line)
     tmpf.write(line)
   tmpf.flush()
@@ -165,7 +170,7 @@ def smart_eps2pdf(infilename, outfilename):
   else:
     gs = '/sw/bin/gs'
   cmdline = '%s -dDEVICEWIDTHPOINTS=%d -dDEVICEHEIGHTPOINTS=%d -dFIXEDMEDIA -q -dBATCH -dSAFER -dMaxBitmap=500000000 -dNOPAUSE -dAlignToPixels=0 -sDEVICE="pdfwrite" -sOutputFile="%s" -f"%s"' % (gs, bbox[2]-bbox[0], bbox[3]-bbox[1], outfilename, tmpfilename)
-  if verbose:
+  if VERBOSE:
     out(cmdline)
   os.system(cmdline)
   tmpf.close()
@@ -394,7 +399,16 @@ class pedigree:
     fp.close()
     self.push("saving %s" % filename, x, y)
     self.dirty = False
-    self.plot(filename)
+    success = self.plot(filename)
+    if not success:
+      success = self.plot(filename, page = 0, pages = 2)
+      if success:
+        success = self.plot(filename, page = 1, pages = 2)
+      if not success:
+        out("Error, file not saved.")
+        return
+      out("The output is two pages, in two separate PDF files.")
+    
     #self.plot(filename, braille=True)
     self.filename = filename
     out("Data file and PDF saved.")
@@ -873,8 +887,17 @@ class pedigree:
     self.push("creating union between %d %d and %d %d" % (y, x+1, y2, x2+1), x, y)
     self.describe(x, y)
 
+  def segments_intersect(self, a0, a1, b0, b1):
+    """Return true if the line segment from a0 to a1 intersects the
+       segment from b0 to b1; they may appear in any order"""
+    aL = min(a0, a1)
+    aR = max(a0, a1)
+    bL = min(b0, b1)
+    bR = max(b0, b1)
+    return aL <= bR and aR >= bL
 
-  def plot(self, filename_stem, cur_x=None, cur_y=None, braille=False):
+  def plot(self, filename_stem, cur_x=None, cur_y=None,
+           braille=False, page=0, pages=1):
     class unionobj:
       pass
 
@@ -900,14 +923,14 @@ class pedigree:
             out("A parent of %d %d is not in the row above." % \
                 (y, x+1))
             out("Cannot save drawing.")
-            return
+            return False
 
     # Step 2: Calculate text extent for each node
     #renderer = matplotlib.backends.backend_pdf.RendererPdf("temp")
     def textwidth(s):
       return len(s) * 5.7
-      #t = text(0.0, 0.0, s, fontsize=9.0)
-      #return t.get_window_extent(renderer).get_bounds()[2]
+      ### t = text(0.0, 0.0, s, fontsize=9.0)
+      ### return t.get_window_extent(renderer).get_bounds()[2]
 
     def splittext(text, max_width):
       lines = []
@@ -950,14 +973,14 @@ class pedigree:
         out("%d %d is in union with %d %d, in a different row." % \
           (y1, x1+1, y2, x2+1))
         out("Cannot save drawing.")
-        return
+        return False
       if x1 > x2:
         (x2, x1) = (x1, x2)
       if x2 != x1 + 1:
         out("%d %d is in union with %d %d, but they are not adjacent." % \
           (y1, x1+1, y2, x2+1))
         out("Cannot save drawing.")
-        return
+        return False
       uobj = unionobj()
       unions[(y1, x1, x2)] = uobj
       uobj.children = []
@@ -1046,6 +1069,7 @@ class pedigree:
     sanity_count = 0
     while 1:
       sanity_count += 1
+      verbose("Trial %d" % sanity_count)
       if sanity_count == 20:
         break
 
@@ -1063,6 +1087,7 @@ class pedigree:
         X = 0
         row = self.data[y]
         for x in range(len(row)):
+          verbose("%d %d" % (y, x + 1))
           n = row[x]
           if x == 0:
             X = n.Xoff
@@ -1070,6 +1095,7 @@ class pedigree:
             X += (6 + n.Xoff)
           if n.placed:
             X = n.X
+            verbose("  leaving at %.1f" % n.X)
             continue
 
           # Old: always placed person next to their partner - decided
@@ -1088,6 +1114,8 @@ class pedigree:
             X1 = childrow[n.children[-1]].X
             Xctr = 0.5*(X0 + X1)
             if Xctr < X - 0.01: # epsilon fudge factor
+              verbose("  is at %.1f, but ctr of its children is at %.1f" %
+                      (X, Xctr))
               # See if there's an overlap with folks on left
               rightmost = -1
               for xleft in range(x-1):
@@ -1100,12 +1128,15 @@ class pedigree:
                   rightmost = max(rightmost, rightmost_0)
               if rightmost < childrow[n.children[0]].group[0]:
                 childrow[childrow[n.children[0]].group[0]].Xoff += (X - Xctr)
+                verbose("  (1) moving %d %d by %.1f" % (
+                    y + 1, childrow[n.children[0]].group[0], X - Xctr))
                 ok = False
               else:
                 Xctr = X
             n.X = Xctr
             X = n.X
             n.placed = True
+            verbose("  case with children complete, moved to %.1f" % n.X)
             continue
           if n.right_union != None and len(n.right_union.children)>0:
             uobj = n.right_union
@@ -1126,13 +1157,19 @@ class pedigree:
               if rightmost < childrow[uobj.children[0]].group[0]:
                 childrow[childrow[uobj.children[0]].group[0]].Xoff += \
                     (X - Xctr)
+                verbose("  (2) moving %d %d by %.1f" % (
+                    y + 1, childrow[uobj.children[0]].group[0], X - Xctr))
                 ok = False
+              else:
+                Xctr = X
             n.X = Xctr
             X = n.X
+            verbose("  case with union complete, moved to %.1f" % n.X)
             n.placed = True
             continue
           n.X = X
           n.placed = True
+          verbose("  default complete, moved to %.1f" % n.X)
           continue
         if (X + 5) > Xmax:
            Xmax = X + 5
@@ -1150,16 +1187,28 @@ class pedigree:
     rowobjs = {}
 
     for y in rows:
+      verbose("Sibling and parent lines (horizontal lines) for row %d" % y)
       robj = rowobj()
       robj.num_parent_lines = 0
       robj.num_sibling_lines = 0
 
       rowobjs[y] = robj
 
+      max_label_lines = 0
+      for x in range(len(row)):
+        num_lines = len(row[x].label_lines)
+        if num_lines > max_label_lines:
+          max_label_lines = num_lines
+      # We pretend that a certain number of "conflicts" exist between
+      # parent lines and the text; every two lines of text equals a
+      # conflict
+      num_label_conflicts = max_label_lines
+
       row = self.data[y]
       sibling_lines = []
       parent_lines = []
       for x in range(len(row)):
+        verbose("%d %d" % (y, x+1))
         n = row[x]
         if n.sibling_line == None:
           conflicts = []
@@ -1174,33 +1223,58 @@ class pedigree:
           for sib in n.siblings:
             row[sib].sibling_line = n.sibling_line
         if n.parent_line == None and len(n.children)>0:
-          conflicts = []
-          for (first, last, line) in parent_lines:
+          conflicts = range(num_label_conflicts)
+          verbose("    Base conflicts: " + str(conflicts))
+          # Check for overlapping lines using link structure only
+          for (index, first, last, line) in parent_lines:
             if n.children[0] <= last and n.children[-1] >= first:
+              verbose("    %d %d conflicts with parent line for %d and %d" %
+                      (y, x+1, first, last))
+              if line not in conflicts:
+                conflicts.append(line)
+          # Check for overlapping lines using positions
+          for (index, first, last, line) in parent_lines:
+            nextrow = self.data[y+1]
+            other_X = row[index].X
+            other_ctr = 0.5 * (nextrow[first].X + nextrow[last].X)
+            this_X = n.X
+            this_ctr = 0.5 * (nextrow[n.children[0]].X +
+                              nextrow[n.children[-1]].X)
+            verbose("    This: %.1f %.1f  Other: %.1f %.1f" %
+               (this_ctr, this_X, other_ctr, other_X))
+            if self.segments_intersect(other_X, other_ctr, this_X, this_ctr):
+              verbose("    %d %d overlaps parent line for %d and %d" %
+                      (y, x+1, first, last))
               if line not in conflicts:
                 conflicts.append(line)
           n.parent_line = 0
           while n.parent_line in conflicts:
             n.parent_line += 1
-          parent_lines.append((n.children[0], n.children[-1], n.parent_line))
+          verbose("    Choosing parent line %d" % n.parent_line)
+          parent_lines.append(
+              (x, n.children[0], n.children[-1], n.parent_line))
+          verbose("    " + str(parent_lines))
         uobj = n.right_union
         if uobj and uobj.parent_line == None and len(uobj.children)>0:
-          conflicts = []
-          for (first, last, line) in parent_lines:
+          conflicts = range(num_label_conflicts)
+          for (index, first, last, line) in parent_lines:
             if uobj.children[0] <= last and uobj.children[-1] >= first:
               if line not in conflicts:
                 conflicts.append(line)
           uobj.parent_line = 0
           while uobj.parent_line in conflicts:
             uobj.parent_line += 1
-          parent_lines.append((uobj.children[0], uobj.children[-1],
-                               uobj.parent_line))
+          verbose("    X2: Choosing parent line %d" % uobj.parent_line)
+          parent_lines.append(
+              (x, uobj.children[0], uobj.children[-1], uobj.parent_line))
       for (first, last, line) in sibling_lines:
         if line+1 > robj.num_sibling_lines:
           robj.num_sibling_lines = line+1
-      for (first, last, line) in parent_lines:
+      for (index, first, last, line) in parent_lines:
         if line+1 > robj.num_parent_lines:
           robj.num_parent_lines = line+1
+      verbose("  Sibling lines: " + str(sibling_lines))
+      verbose("  Parent lines: " + str(parent_lines))
 
     # Compute height and Y position of each row
     Y = 0
@@ -1226,7 +1300,7 @@ class pedigree:
     Ymax = Y
 
     # Debug: print everyone's position
-    if 0:
+    if VERBOSE:
       for y in rows:
         robj = rowobjs[y]
         row = self.data[y]
@@ -1236,22 +1310,52 @@ class pedigree:
           if n.right_union != None:
             out("  UNION")
 
-    text_lines = splittext(self.text, 600)
-    text_height = 2.5 + 1.2 * len(text_lines)
-
     # Set up figure
     (Xmargin, Ymargin) = (0.75, 0.75)
-    if Xmax > (Ymax+text_height):
+    Xmin = 0.0
+    Ymin = 0.0
+
+    text_lines = splittext(self.text, 600)
+    line_height_guess = 1.5
+    text_height_guess = 2.5 + line_height_guess * len(text_lines)
+
+    if Xmax > (Ymax+text_height_guess):
       landscape = True
-      (Xpage, Ypage) = (11.0, 8.5)
+      (Xpage, Ypage) = (11.0 * pages, 8.5)
     else:
       landscape = False
-      (Xpage, Ypage) = (8.5, 11.0)
-    Xinnerpage = Xpage - 2 * Xmargin
-    Yinnerpage = Ypage - 2 * Ymargin
-    scale = min(Xinnerpage / Xmax, Yinnerpage / (Ymax + text_height))
+      (Xpage, Ypage) = (8.5, 11.0 * pages)
+    Xinnerpage = Xpage - (2 * pages) * Xmargin
+    Yinnerpage = Ypage - (2 * pages) * Ymargin
+    scale = min(Xinnerpage / Xmax, Yinnerpage / (Ymax + text_height_guess))
+
+    if scale < 0.09 and pages == 1:
+      # Return false, which forces the calling function
+      # to call again with multiple pages.
+      return False
+
+    line_height = 0.2 / scale
+    text_height = 2.5 + line_height * len(text_lines)
 
     linewidth = 5 * scale
+
+    # Those calculations were for both pages, to set the scale.
+    # Now switch to the values for just the current page:
+    if pages > 1:
+      if landscape:
+        (Xpage, Ypage) = (11.0, 8.5)
+        if page == 0:
+          Xmax /= 2
+        else:
+          Xmin = Xmax / 2
+      else:
+        (Xpage, Ypage) = (8.5, 11.0)
+        if page == 0:
+          Ymax /= 2
+        else:
+          Ymin = Ymax / 2
+      Xinnerpage = Xpage - 2 * Xmargin
+      Yinnerpage = Ypage - 2 * Ymargin
 
     fig = figure(figsize = (Xpage, Ypage), dpi = 300)
     subplots_adjust(left = Xmargin/Xpage,
@@ -1264,11 +1368,18 @@ class pedigree:
     if text_height < (Yinnerpage/scale - Ymax) / 2:
       text_height = (Yinnerpage/scale - Ymax) / 2
 
-    for l in range(len(text_lines)):
-      line = text_lines[l]
-      text(Xmax/2.0, l * 1.2 - text_height, line, fontsize=10.0,
+    # Draw the title text, but only on page 1
+    if page == 0:
+      for l in range(len(text_lines)):
+        line = text_lines[l]
+        text(Xmax/2.0, l * line_height - text_height, line, fontsize=10.0,
+             horizontalalignment='center',
+             verticalalignment='top')
+    else:
+      line = "Page %d" % (page + 1)
+      text(Xmax/2.0, - text_height, line, fontsize=10.0,
            horizontalalignment='center',
-           verticalalignment='top')
+           verticalalignment='top')      
 
     def draw_braille(str, X, Y, center):
       bx = 2.0
@@ -1342,13 +1453,15 @@ class pedigree:
              horizontalalignment='center',
              verticalalignment='center')
       elif n.multiple == 10:
-        text(X + 2.45, Y + 0.5, "n", fontsize=36*scale,
-             horizontalalignment='center',
-             verticalalignment='center')
+        if X + 2.45 < Xmax + 2 and X + 2.45 > Xmin - 2:
+          text(X + 2.45, Y + 0.5, "n", fontsize=36*scale,
+               horizontalalignment='center',
+               verticalalignment='center')
       elif n.multiple > 1:
-        text(X + 2.45, Y + 0.5, "%d" % n.multiple, fontsize=36*scale,
-             horizontalalignment='center',
-             verticalalignment='center')
+        if X + 2.45 < Xmax + 2 and X + 2.45 > Xmin - 2:
+          text(X + 2.45, Y + 0.5, "%d" % n.multiple, fontsize=36*scale,
+               horizontalalignment='center',
+               verticalalignment='center')
       if braille:
         if len(n.children)>0:
           draw_braille("%d%d" % (y, x+1), X+3.5, Y+2.5, center=False)
@@ -1364,11 +1477,12 @@ class pedigree:
         else:
           textXpos = X + 2.5
           halign = 'center'
-        for l in range(len(n.label_lines)):
-          line = n.label_lines[l]
-          text(textXpos, Y + Ytexttop + l*0.8, line, fontsize=45*scale,
-               horizontalalignment=halign,
-               verticalalignment='top')
+        if textXpos < Xmax + 2 and textXpos > Xmin - 2:
+          for l in range(len(n.label_lines)):
+            line = n.label_lines[l]
+            text(textXpos, Y + Ytexttop + l*0.8, line, fontsize=52*scale,
+                 horizontalalignment=halign,
+                 verticalalignment='top')
 
     def makechildlines(Xtop, Ytop, Xcenter, Yparent, Ysibling, Ychild,
                        children):
@@ -1442,8 +1556,11 @@ class pedigree:
 
     axis('scaled')
 
-    ax = axis([-1, Xmax+1, Ymax+1, -(text_height+1)])
+    ax = axis([Xmin-1, Xmax+1, Ymax+1, Ymin-(text_height+1)])
     gca().set_axis_off()
+
+    if pages > 1:
+      filename_stem = "%s-page-%d" % (filename_stem, page+1)
 
     if braille:
       filename = '%s.braille.pdf' % filename_stem
@@ -1454,6 +1571,9 @@ class pedigree:
       smart_eps2pdf('tmp.eps', filename)
     else:
       savefig(filename)
+
+    return True
+    # End plot
 
   def run(self, x0=None, y0=None):
     if x0!=None and y0!=None:
@@ -1684,9 +1804,22 @@ if __name__=="__main__":
   global g_connection
   g_connection = None
 
+  if 0:  # test segments_intersect
+    p = pedigree()
+    assert(p.segments_intersect(0, 3, 2, 5))
+    assert(p.segments_intersect(3, 0, 2, 5))
+    assert(p.segments_intersect(0, 3, 5, 2))
+    assert(p.segments_intersect(0, 3, 3, 5))
+    assert(not p.segments_intersect(0, 3, 4, 5))
+    assert(not p.segments_intersect(0, 3, 5, 4))
+    assert(not p.segments_intersect(0, 3, -2, -1))
+    assert(not p.segments_intersect(0, 3, -1, -2))
+    assert(p.segments_intersect(0, 3, -1, 0))
+    assert(p.segments_intersect(0, 3, -1, 1))
+
   port = 0
   filename = None
-  if len(sys.argv)==2:
+  if len(sys.argv) >= 2:
     try:
       port = int(sys.argv[1])
     except:
