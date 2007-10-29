@@ -11,8 +11,9 @@ UP = 1002
 DOWN = 1003
 NEWLINE = 1004
 BACKSPACE = 1005
+TAB = 1006
 
-import sys, os, datetime, traceback
+import sys, os, re, datetime, traceback
 
 windows = None
 
@@ -62,6 +63,7 @@ Note that when counting the number of people, n people is counted as 10.\r
 
 Use the arrow keys to move, or press J to jump to a particular person.\r
 Press D to describe the current person.\r
+Press Tab for a person's relation to the proband.\r
 Press W to describe the whole tree.\r
 
 Press A to mark a person as affected.\r
@@ -291,6 +293,8 @@ class pedigree:
       return NEWLINE
     elif ord(c)==8 or ord(c)==126 or ord(c)==127:
       return BACKSPACE
+    elif ord(c)==9:
+      return TAB
     elif ord(c)==91:
       if ord(self.char_history[-2])==27:
         return None
@@ -619,6 +623,213 @@ class pedigree:
       if n.label != "":
         str += " " + n.label
       out(str)
+
+  # Return the length of the first string in a list, or zero if empty
+  def pathlen(self, l):
+    if len(l) == 0:
+      return 0
+    else:
+      return len(l[0])
+
+  # See longdescribe, below, to understand the format of r'
+  def recursive_describe_relation(self, r):
+    if r == 'p':
+      return 'the proband'
+
+    # Table should be in order of the longest chain to the shortest
+    table = [
+      ('[MFU][MFU][MFU][mfx][mfx][mfx]', 'a second cousin of '),
+      ('[MFU][MFU][mfx][mfx]', 'a first cousin of '),
+      ('M[MF]M', 'a paternal great grandfather of '),
+      ('M[MF]F', 'a paternal great grandmother of '),
+      ('F[MF]M', 'a maternal great grandfather of '),
+      ('F[MF]F', 'a maternal great grandmother of '),
+      ('[mfx][mfx]m', 'a great grandson of '),
+      ('[mfx][mfx]f', 'a great granddaughter of '),
+      ('[mfx][mfx]x', 'a great grandchild of '),
+      ('M[MFU]m', 'a paternal uncle of '),
+      ('M[MFU]f', 'a paternal aunt of '),
+      ('F[MFU]m', 'a maternal uncle of '),
+      ('F[MFU]f', 'a maternal aunt of '),
+      ('MM', 'the paternal grandfather of '),
+      ('MF', 'the paternal grandmother of '),
+      ('MU', 'the paternal grandparents of '),
+      ('FM', 'the maternal grandfather of '),
+      ('FF', 'the maternal grandmother of '),
+      ('FU', 'the maternal grandparents of '),
+      ('[mfx]m', 'a grandson of '),
+      ('[mfx]f', 'a granddaughter of '),
+      ('[mfx]x', 'a grandchild of '),
+      ('[MFU]m', 'a brother of '),
+      ('[MFU]f', 'a sister of '),
+      ('[MFU]x', 'a sibling of '),
+      ('M', 'the father of '),
+      ('F', 'the mother of '),
+      ('U', 'the parents of '),
+      ('m', 'a son of '),
+      ('f', 'a daughter of '),
+      ('x', 'a child of ')]
+
+    for (suffix, description) in table:
+      # Match the end of the string
+      if re.search('%s$' % suffix, r) != None:
+        chars = 0
+        ok = True
+        for c in suffix:
+          if c == '[':
+            ok = False
+          elif c == ']':
+            ok = True
+          if ok:
+            chars += 1
+        return description + self.recursive_describe_relation(r[:-chars])
+    return r
+
+  def longdescribe(self, ax, ay):
+    row = self.data[ay]
+    if row == []:
+      out("Row %d is empty." % ay)
+      return
+    elif ax==-1:
+      out("Beginning of row %d, length %d." % (ay, len(row)))
+      return
+
+    # Find the proband
+    px = -1
+    py = -1
+    for y in self.data:
+      row = self.data[y]
+      for x in range(len(row)):
+        n = row[x]
+        if n.proband:
+          if px != -1 or py != -1:
+            out("Multiple probands were found, at %d %d and %d %d." % (
+                py, px+1, y, x+1))
+            out("Please fix this before trying to determine relations.")
+            return
+          px = x
+          py = y
+    if ay == py and ax == px:
+      out("%d %d is the proband." % (ay, ax + 1))
+      return
+
+    # Do a breadth-first search from the proband, building up a vector
+    # of relations that trace the path from the proband:
+    #   "M" for male parent,
+    #   "F" for female parent,
+    #   "U" for both parents,
+    #   "X" for unknown parent,
+    #   "m" for male child,
+    #   "f" for female child,
+    #   "x" for unknown child
+    #
+    # For example, "MM" would be the paternal grandfather, and "Mf", "Ff",
+    # and "Uf" would all be a sister.
+
+    # BFS 1: Clear all
+    for y in self.data:
+      for n in self.data[y]:
+        n.relations = []
+
+    # BFS 2: Enqueue the proband, then do a BFS
+    r = "p"
+    queue = [(px, py, r)]
+    self.data[py][px].relations.append(r)
+    while len(queue) > 0:
+      (x, y, r) = queue[0]
+      queue = queue[1:]
+      n = self.data[y][x]
+
+      if n.parents:
+        (fx, fy, mx, my) = n.parents
+        if fx!=None and fy!=None:
+          f = self.data[fy][fx]
+          pathlen = self.pathlen(f.relations)
+          if pathlen == 0 or pathlen == len(r) + 1:
+            f.relations.append(r + "M")
+            queue.append((fx, fy, r + "M"))
+            #out("  enqueue %d %d len=%d pathlen=%d" % (
+            #   fy, fx+1, len(r + "M"), pathlen))
+        if mx!=None and my!=None:
+          m = self.data[my][mx]
+          pathlen = self.pathlen(m.relations)
+          if pathlen == 0 or pathlen == len(r) + 1:
+            m.relations.append(r + "F")
+            queue.append((mx, my, r + "F"))
+            #out("  enqueue %d %d len=%d pathlen=%d" % (
+            #   my, mx+1, len(r + "F"), pathlen))
+
+      if y+1 in self.data:
+        cy = y + 1
+        for cx in range(len(self.data[cy])):
+          c = self.data[cy][cx]
+          pathlen = self.pathlen(c.relations)
+          if pathlen > 0 and pathlen != len(r) + 1:
+            continue
+          if c.gender == 'male':
+            g = 'm'
+          elif c.gender == 'female':
+            g = 'f'
+          else:
+            g = 'x'
+          if c.parents != None:
+            (fx, fy, mx, my) = c.parents
+            if (fx == x and fy == y) or (mx == x and my == y):
+              c.relations.append(r + g)
+              queue.append((cx, cy, r + g))
+              #out("  enqueue %d %d len=%d pathlen=%d" % (
+              #   cy, cx+1, len(r + g), pathlen))
+
+    relations = self.data[ay][ax].relations
+    if len(relations) == 0:
+      out("%d %d is not related to the proband." % (ay, ax + 1))
+      if self.data[ay][ax].parents != None:
+         parents = self.data[ay][ax].parents
+         print parents
+      return
+    pathlen = self.pathlen(relations)
+    # Do some simplifying: for each position in the path, if both
+    # M and F appear, and everything up to that point is the same,
+    # replace that position with U (both parents), and get rid of
+    # duplicates.
+    for p in range(1, pathlen):
+      prefix = relations[0][:p]
+      Mcount = 0
+      Fcount = 0
+      Ocount = 0
+      prefix_ok = True
+      for r in relations:
+        if r[:p] != prefix:
+          prefix_ok = False
+          break
+        if r[p] == 'M':
+          Mcount += 1
+        elif r[p] == 'F':
+          Fcount += 1
+        else:
+          Ocount += 1
+      if Mcount > 0 and Fcount > 0 and Ocount == 0 and prefix_ok:
+        new_relations = []
+        for r in relations:
+          if r[p] == 'M':
+            new_relations.append(r[:p] + 'U' + r[p+1:])
+        relations = new_relations
+
+    # Remove duplicates
+    new_relations = []
+    for r in relations:
+      if r not in new_relations:
+        new_relations.append(r)
+    relations = new_relations
+
+    strs = []
+    for r in relations:
+      str = self.recursive_describe_relation(r)
+      #str += " (%s)" % r
+      #  + (", %d %d" % (py, px+1))
+      strs.append(str)
+
+    out("%d %d is %s." % (ay, ax+1, ", and ".join(strs)))
 
   def edit(self, x, y):
     out("Enter a new description for %d %d." % (y, x+1))
@@ -1757,6 +1968,8 @@ class pedigree:
         elif c==BACKSPACE:
           (x, y) = self.deletenode(x, y)
           self.describe(x, y)
+        elif c==TAB:
+          self.longdescribe(x, y)
         elif c=='s':
           self.save(x, y)
         elif c=='l':
