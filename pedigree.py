@@ -1,4 +1,8 @@
 #!python
+#
+# Edit a label or top text in place
+# Move from one location to another
+# Print which one it was stuck on if it fails (try "wo3")
 
 DBG = 1 # stack trace
 VERBOSE = False
@@ -12,6 +16,15 @@ DOWN = 1003
 NEWLINE = 1004
 BACKSPACE = 1005
 TAB = 1006
+
+LARGE_LABEL_CHARS = 50   # A node with more than this many chars gets
+                         # twice as much horizontal space for its text
+MED_LABEL_CHARS = 5      # A node with more than this many chars gets
+                         # a little more horizontal space for its text
+MIN_HORIZONTAL_SPACE         = 1.5
+EXTRA_MED_HORIZONTAL_SPACE   = 2.75 # Extra space (each end) for med label
+EXTRA_LARGE_HORIZONTAL_SPACE = 5.5  # Extra space (each end) for large label
+MIN_VERTICAL_SPACE           = 2.5
 
 import sys, os, re, datetime, traceback
 
@@ -409,9 +422,17 @@ class pedigree:
       if success:
         success = self.plot(filename, page = 1, pages = 2)
       if not success:
-        out("Error, file not saved.")
-        return
-      out("The output is two pages, in two separate PDF files.")
+        success = self.plot(filename, page = 0, pages = 3)
+        if success:
+          success = self.plot(filename, page = 1, pages = 3)
+        if success:
+          success = self.plot(filename, page = 2, pages = 3)
+        if not success:
+          out("Error, file not saved.")
+          return
+        out("The output is three pages, in three separate PDF files.")
+      else:
+        out("The output is two pages, in two separate PDF files.")
     
     #self.plot(filename, braille=True)
     self.filename = filename
@@ -913,8 +934,9 @@ class pedigree:
     for i in range(len(row)-1, x, -1):
       self.move(i-1,y,i,y)
 
-  def readline(self):
-    line = ""
+  def readline(self, initial_line = ""):
+    line = initial_line
+    out1(line)
     while 1:
       c = self.get_next_char()
       if c==NEWLINE:
@@ -1175,7 +1197,10 @@ class pedigree:
         n.label_lines = []
         if n.label == None or n.label == "":
           continue
-        n.label_lines = splittext(n.label, 80)
+        if len(n.label) > LARGE_LABEL_CHARS:
+          n.label_lines = splittext(n.label, 160)
+        else:
+          n.label_lines = splittext(n.label, 80)
 
     # Step 3: Insert unions
     unions = {}
@@ -1259,15 +1284,28 @@ class pedigree:
     # Step 7: Add extra space between adjacent people in a row who
     # aren't in the same group, and add extra space after people
     # who have direct children (i.e. children not through a union)
-    # because their text goes off to the right.
+    # because their text goes off to the right.  Add extra space
+    # for anyone with more than a trivial amount of text.
     for y in rows:
       row = self.data[y]
-      for x in range(1, len(row)):
-        if (row[x] not in row[x-1].group and
-            row[x-1] not in row[x].group):
-          row[x].Xoff += 1
-        if len(row[x-1].children) > 0:
-          row[x].Xoff += 2
+      next = 0.0
+      for x in range(len(row)):
+        row[x].Xoff += next
+        next = 0.0
+        if x > 0:
+          if (row[x] not in row[x-1].group and
+              row[x-1] not in row[x].group):
+            row[x].Xoff += 1.0
+          if len(row[x-1].children) > 0:
+            row[x].Xoff += 2.0
+        if len(row[x].label) > LARGE_LABEL_CHARS:
+          row[x].Xoff += EXTRA_LARGE_HORIZONTAL_SPACE
+          next = EXTRA_LARGE_HORIZONTAL_SPACE
+        elif len(row[x].label) > MED_LABEL_CHARS:
+          row[x].Xoff += EXTRA_MED_HORIZONTAL_SPACE
+          next = EXTRA_MED_HORIZONTAL_SPACE
+        if x == 0:  # first one in row, Xoff is ignored
+          next *= 2
 
     # Layout time!  Do one row at a time, starting from the bottom.
     # Try to lay out each parent centered around the center point of
@@ -1281,7 +1319,7 @@ class pedigree:
     while 1:
       sanity_count += 1
       verbose("Trial %d" % sanity_count)
-      if sanity_count == 20:
+      if sanity_count == 5:
         break
 
       # Reset positions
@@ -1297,13 +1335,16 @@ class pedigree:
           break
         X = 0
         row = self.data[y]
+        n_next = None
         for x in range(len(row)):
           verbose("%d %d" % (y, x + 1))
           n = row[x]
+          if (x + 1) < len(row):
+            n_next = row[x + 1]
           if x == 0:
             X = n.Xoff
           else:
-            X += (6 + n.Xoff)
+            X += (MIN_HORIZONTAL_SPACE + n.Xoff)
           if n.placed:
             X = n.X
             verbose("  leaving at %.1f" % n.X)
@@ -1350,10 +1391,13 @@ class pedigree:
             verbose("  case with children complete, moved to %.1f" % n.X)
             continue
           if n.right_union != None and len(n.right_union.children)>0:
+            # Placing a person directly above the center of their children
             uobj = n.right_union
             X0 = childrow[uobj.children[0]].X
             X1 = childrow[uobj.children[-1]].X
-            Xctr = 0.5*(X0 + X1) - 3.5
+            Xoff0 = childrow[uobj.children[0]].Xoff
+            Xoff1 = childrow[uobj.children[-1]].Xoff
+            Xctr = 0.5*(X0 + X1) - ((MIN_HORIZONTAL_SPACE + n_next.Xoff) / 2.0)
             if Xctr < X - 0.01: # epsilon fudge factor
               # See if there's an overlap with folks on left
               rightmost = -1
@@ -1387,6 +1431,12 @@ class pedigree:
       if ok:
         break
 
+    for y in rows:
+      row = self.data[y]
+      for x in range(len(row)):
+        if 'X' not in dir(row[x]):
+          row[x].X = 0
+
     # For each row, figure out the sibling line y-position
     # and the parent line y-position (the parent line is not
     # relevant if the parent or union is perfectly centered on
@@ -1398,6 +1448,7 @@ class pedigree:
     rowobjs = {}
 
     for y in rows:
+      row = self.data[y]
       verbose("Sibling and parent lines (horizontal lines) for row %d" % y)
       robj = rowobj()
       robj.num_parent_lines = 0
@@ -1413,9 +1464,9 @@ class pedigree:
       # We pretend that a certain number of "conflicts" exist between
       # parent lines and the text; every two lines of text equals a
       # conflict
-      num_label_conflicts = max_label_lines
+      num_label_conflicts = int((max_label_lines + 1) / 2)
+      verbose("Row %d: label conflicts = %d" % (y, num_label_conflicts))
 
-      row = self.data[y]
       sibling_lines = []
       parent_lines = []
       for x in range(len(row)):
@@ -1430,7 +1481,8 @@ class pedigree:
           n.sibling_line = 0
           while n.sibling_line in conflicts:
             n.sibling_line += 1
-          sibling_lines.append((n.siblings[0], n.siblings[-1], n.sibling_line))
+          sibling_lines.append(
+              (n.siblings[0], n.siblings[-1], n.sibling_line))
           for sib in n.siblings:
             row[sib].sibling_line = n.sibling_line
         if n.parent_line == None and len(n.children)>0:
@@ -1445,7 +1497,11 @@ class pedigree:
                 conflicts.append(line)
           # Check for overlapping lines using positions
           for (index, first, last, line) in parent_lines:
+            verbose(("    (index=%d, first=%d, last=%d, line=%d)" +
+                     " len(row)=%d") % (
+                     index, first, last, line, len(row)))
             nextrow = self.data[y+1]
+            verbose(str(row[index]))
             other_X = row[index].X
             other_ctr = 0.5 * (nextrow[first].X + nextrow[last].X)
             this_X = n.X
@@ -1484,6 +1540,8 @@ class pedigree:
       for (index, first, last, line) in parent_lines:
         if line+1 > robj.num_parent_lines:
           robj.num_parent_lines = line+1
+      if robj.num_parent_lines < num_label_conflicts:
+	robj.num_parent_lines = num_label_conflicts
       verbose("  Sibling lines: " + str(sibling_lines))
       verbose("  Parent lines: " + str(parent_lines))
 
@@ -1492,21 +1550,16 @@ class pedigree:
     for y in rows:
       max_lines = 0
       row = self.data[y]
-      for x in range(len(row)):
-        n = row[x]
-        num_lines = len(n.label_lines)
-        if n.proband:
-          num_lines += 1
-        max_lines = max(max_lines, num_lines)
-      if max_lines <= 5:
-        base_ht = 5
-      else:
-        base_ht = 1.2 + 0.8 * max_lines
+      base_ht = MIN_VERTICAL_SPACE
+      if n.proband:
+        base_ht += 1
       robj = rowobjs[y]
       robj.height = base_ht + robj.num_parent_lines + robj.num_sibling_lines
+      robj.Y = int(Y)
+      verbose("Row %d: Y=%d height=%.2f parent=%d sibl=%d" % (
+        y, robj.Y, robj.height, robj.num_parent_lines, robj.num_sibling_lines))
       robj.num_parent_lines = 0
       robj.num_sibling_lines = 0
-      robj.Y = int(Y)
       Y += robj.height
     Ymax = Y
 
@@ -1540,7 +1593,8 @@ class pedigree:
     Yinnerpage = Ypage - (2 * pages) * Ymargin
     scale = min(Xinnerpage / Xmax, Yinnerpage / (Ymax + text_height_guess))
 
-    if scale < 0.09 and pages == 1:
+    verbose("Scale: %.3f" % scale)
+    if scale < 0.1 and pages < 3:
       # Return false, which forces the calling function
       # to call again with multiple pages.
       return False
@@ -1552,7 +1606,28 @@ class pedigree:
 
     # Those calculations were for both pages, to set the scale.
     # Now switch to the values for just the current page:
-    if pages > 1:
+    if pages == 3:
+      if landscape:
+        (Xpage, Ypage) = (11.0, 8.5)
+        if page == 0:
+          Xmax /= 3
+        elif page == 1:
+          Xmin = Xmax / 3
+          Xmax = (Xmax * 2) / 3
+        elif page == 2:
+          Xmin = (Xmax * 2) / 3
+      else:
+        (Xpage, Ypage) = (8.5, 11.0)
+        if page == 0:
+          Ymax /= 3
+        elif page == 1:
+          Ymin = Ymax / 3
+          Ymax = (Ymax * 2) / 3
+        elif page == 2:
+          Ymin = (Ymax * 2) / 3
+      Xinnerpage = Xpage - 2 * Xmargin
+      Yinnerpage = Ypage - 2 * Ymargin
+    elif pages == 2:
       if landscape:
         (Xpage, Ypage) = (11.0, 8.5)
         if page == 0:
