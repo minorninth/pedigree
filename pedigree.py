@@ -19,11 +19,11 @@ TAB = 1006
 
 LARGE_LABEL_CHARS = 50   # A node with more than this many chars gets
                          # twice as much horizontal space for its text
-MED_LABEL_CHARS = 5      # A node with more than this many chars gets
+MED_LABEL_CHARS = 4      # A node with more than this many chars gets
                          # a little more horizontal space for its text
-MIN_HORIZONTAL_SPACE         = 1.5
+MIN_HORIZONTAL_SPACE         = 1.6
 EXTRA_MED_HORIZONTAL_SPACE   = 2.75 # Extra space (each end) for med label
-EXTRA_LARGE_HORIZONTAL_SPACE = 5.5  # Extra space (each end) for large label
+EXTRA_LARGE_HORIZONTAL_SPACE = 7.0  # Extra space (each end) for large label
 MIN_VERTICAL_SPACE           = 2.5
 
 import sys, os, re, datetime, traceback
@@ -417,6 +417,9 @@ class pedigree:
     self.push("saving %s" % filename, x, y)
     self.dirty = False
     success = self.plot(filename)
+    if success == "ERROR":
+      out("Data file was saved, but PDF was not saved.")
+      return
     if not success:
       success = self.plot(filename, page = 0, pages = 2)
       if success:
@@ -1198,7 +1201,7 @@ class pedigree:
         if n.label == None or n.label == "":
           continue
         if len(n.label) > LARGE_LABEL_CHARS:
-          n.label_lines = splittext(n.label, 160)
+          n.label_lines = splittext(n.label, 140)
         else:
           n.label_lines = splittext(n.label, 80)
 
@@ -1291,21 +1294,27 @@ class pedigree:
       next = 0.0
       for x in range(len(row)):
         row[x].Xoff += next
-        next = 0.0
-        if x > 0:
-          if (row[x] not in row[x-1].group and
-              row[x-1] not in row[x].group):
-            row[x].Xoff += 1.0
-          if len(row[x-1].children) > 0:
-            row[x].Xoff += 2.0
+        spacing = 0.0
+        nchild = False
+        if (x > 0 and
+            row[x] not in row[x-1].group and
+            row[x-1] not in row[x].group):
+          spacing += 0.5
+        if len(row[x].children) > 0:
+          spacing += 1.0
+          nchild = True
         if len(row[x].label) > LARGE_LABEL_CHARS:
-          row[x].Xoff += EXTRA_LARGE_HORIZONTAL_SPACE
-          next = EXTRA_LARGE_HORIZONTAL_SPACE
+	  spacing += EXTRA_LARGE_HORIZONTAL_SPACE
         elif len(row[x].label) > MED_LABEL_CHARS:
-          row[x].Xoff += EXTRA_MED_HORIZONTAL_SPACE
-          next = EXTRA_MED_HORIZONTAL_SPACE
-        if x == 0:  # first one in row, Xoff is ignored
-          next *= 2
+          spacing += EXTRA_MED_HORIZONTAL_SPACE
+        if x == 0 or nchild:
+          # Xoff doesn't matter at the beginning of the line, or when
+          # the text will be all to the right
+          next = 1.5 * spacing
+        else:
+          # Normally, equal spacing before and after
+          row[x].Xoff += spacing
+          next = spacing
 
     # Layout time!  Do one row at a time, starting from the bottom.
     # Try to lay out each parent centered around the center point of
@@ -1316,11 +1325,32 @@ class pedigree:
     # and try again.  Otherwise, lay out the parent where it belongs.
 
     sanity_count = 0
+    sanity_moves = []
     while 1:
       sanity_count += 1
       verbose("Trial %d" % sanity_count)
-      if sanity_count == 5:
-        break
+      if sanity_count == 20:
+        sanmap = {}
+        for move in sanity_moves:
+          sanmap[move] = 1 + sanmap.get(move, 0)
+        out("Sorry, it's not possible to draw this pedigree.")
+        found_count = 0
+        ymax = -1
+        found_x = 0
+        found_y = 0
+        for ((y0, x0, y1, x1), count) in sanmap.items():
+          if count > 2:
+            if y0 > ymax:
+              ymax = y0
+              found_x = x0
+              found_y = y0
+              found_count = 1
+            elif y0 == ymax:
+              found_count += 1
+        if found_count == 1:
+          out("The problem appears to be near %d %d, hope that helps." %
+              (found_y, found_x))
+        return "ERROR"
 
       # Reset positions
       for y in rows:
@@ -1382,6 +1412,8 @@ class pedigree:
                 childrow[childrow[n.children[0]].group[0]].Xoff += (X - Xctr)
                 verbose("  (1) moving %d %d by %.1f" % (
                     y + 1, childrow[n.children[0]].group[0], X - Xctr))
+                sanity_moves.append((y, x+1,
+                                     y+1, 1+childrow[n.children[0]].group[0]))
                 ok = False
               else:
                 Xctr = X
@@ -1414,6 +1446,8 @@ class pedigree:
                     (X - Xctr)
                 verbose("  (2) moving %d %d by %.1f" % (
                     y + 1, childrow[uobj.children[0]].group[0], X - Xctr))
+                sanity_moves.append((y, x+1, y+1,
+                                     1+childrow[uobj.children[0]].group[0]))
                 ok = False
               else:
                 Xctr = X
@@ -1464,7 +1498,7 @@ class pedigree:
       # We pretend that a certain number of "conflicts" exist between
       # parent lines and the text; every two lines of text equals a
       # conflict
-      num_label_conflicts = int((max_label_lines + 1) / 2)
+      num_label_conflicts = int((max_label_lines + 2) * 2 / 3)
       verbose("Row %d: label conflicts = %d" % (y, num_label_conflicts))
 
       sibling_lines = []
@@ -1501,7 +1535,6 @@ class pedigree:
                      " len(row)=%d") % (
                      index, first, last, line, len(row)))
             nextrow = self.data[y+1]
-            verbose(str(row[index]))
             other_X = row[index].X
             other_ctr = 0.5 * (nextrow[first].X + nextrow[last].X)
             this_X = n.X
