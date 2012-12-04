@@ -1,8 +1,14 @@
 #!python
 #
-# Edit a label or top text in place
+# * Edit a label or top text in place
 # Move from one location to another
 # Print which one it was stuck on if it fails (try "wo3")
+#
+# Double-line for consanguinous relationship
+#
+# Bug: 1 parent described as "father"
+# Bug: doesn't say Gary is related to me
+# Bug: describe both left and right twin, as twins
 
 DBG = 1 # stack trace
 VERBOSE = False
@@ -36,6 +42,34 @@ try:
 except:
   import tty
   windows = False
+
+if windows:
+  import readline
+  def readline_wrapper(initial_line):
+    readline_obj = readline.Readline()
+    readline_obj._bind_key("control-left", readline_obj.backward_word)
+    readline_obj._bind_key("control-right", readline_obj.forward_word)
+    def readline_init():
+      readline_obj.insert_text(initial_line)
+    readline_obj.set_pre_input_hook(readline_init)
+    str = readline_obj.readline()
+    if str and str[-1] == '\n':
+      str = str[:-1]
+    return str
+else:
+  import readline
+  import termios
+  def readline_wrapper(initial_line):
+    global g_buffered_termios
+    global g_raw_termios
+    def readline_init():
+      readline.insert_text(initial_line)
+      readline.redisplay()
+    readline.set_pre_input_hook(readline_init)
+    termios.tcsetattr(sys.stdin, termios.TCSAFLUSH, g_buffered_termios)
+    str = raw_input('> ')
+    termios.tcsetattr(sys.stdin, termios.TCSAFLUSH, g_raw_termios)
+    return str
 
 import matplotlib
 if windows:
@@ -90,6 +124,7 @@ Press Shift-T on the first sibling to mark two siblings as twins.\r
 
 Press U to create or delete a union.\r
 Press P to set or delete a person's parents.\r
+Press G to grab the next parentless person in the next row as a child.\r
 Press dot P to use the same parents as the previous person.\r
 Press backspace to delete a person.\r
 
@@ -255,7 +290,7 @@ class state:
 
 class pedigree:
   def __init__(self):
-    self.text = 'Prepared by Ronit Ovadia'
+    self.text = 'Created by Ronit Ovadia'
     self.data = {}
     self.data[1] = []
     self.unions = {}
@@ -394,6 +429,117 @@ class pedigree:
       return None
     self.load(filename)
 
+  def savexml(self, filename):
+    prefix = "progeny/"
+    try:
+      os.listdir("progeny")
+    except OSError:
+      try:
+        os.mkdir("progeny")
+      except:
+        prefix = ""
+    fp = open(prefix + filename + ".xml", "w")
+    fp.write("<?xml version='1.0' encoding='UTF-8'?>\n")
+    fp.write("<PROGENYPEDIGREE versionnumber='2.01' ")
+    fp.write("createdby='RonitPedigree' ")
+    now = datetime.datetime.now()
+    fp.write("creationdate='%d/%d/%02d' >\n" %
+      (now.month, now.day, now.year % 100))
+    fp.write("<LEGEND>\n")
+    fp.write(" <LEGENDITEM legendid='1' legendtext='Breast Cancer' >\n")
+    fp.write("  <LEGENDSYMBOL quadrant1DotColor='black' ")
+    fp.write("   quadrant1dot='yes' />\n")
+    fp.write(" </LEGENDITEM>\n")
+    fp.write(" <LEGENDITEM legendid='2' legendtext='Ovarian Cancer' >\n")
+    fp.write("  <LEGENDSYMBOL  quadrant2DotColor='red' ")
+    fp.write("   quadrant2dot='yes' />\n")
+    fp.write(" </LEGENDITEM>\n")
+    fp.write("</LEGEND>\n")
+    fp.write("<SUBTEXTLEGEND>\n")
+    fp.write(" <SUBTEXTLEGENDITEM fieldid='1' itemorder='1' ")
+    fp.write("  legendtext='Subtext Line 1' >\n")
+    fp.write(" </SUBTEXTLEGENDITEM>\n")
+    fp.write("</SUBTEXTLEGEND>\n")
+    fp.write("  <FAMILY javabean='yes' >\n")
+
+    # Give everyone an unique id
+    upn = 1
+    for y in self.data:
+      row = self.data[y]
+      for x in range(len(row)):
+        n = row[x]
+        n.upn = upn
+        upn += 1
+
+    # Output all individuals
+    for y in self.data:
+      row = self.data[y]
+      for x in range(len(row)):
+        n = row[x]
+
+        fp.write("<INDIVIDUAL upn='%d' generation='%d'" % (n.upn, y - 1))
+
+        if n.gender == 'male':
+          fp.write(" gender='1'")
+        elif n.gender == 'female':
+          fp.write(" gender='0'")
+
+        if n.proband:
+          fp.write(" proband='1'")
+
+        if n.dead:
+          fp.write(" deceased='1'")
+
+        fp.write(">\n")
+
+        if n.affected:
+          fp.write("<SYMBOL quadrant2DotColor='red' quadrant2dot='yes' />\n")
+        if n.carrier:
+          fp.write("<SYMBOL quadrant1DotColor='black' quadrant1dot='yes' />\n")
+
+        c = 0
+        for (x1, y1, x2, y2) in self.unions:
+          if x1==x and y1==y:
+            c += 1
+            fp.write("<SPOUSE spousenumber='%d' spouseid='%d' />\n" %
+              (c, self.data[y2][x2].upn))
+          if x2==x and y2==y:
+            c += 1
+            fp.write("<SPOUSE spousenumber='%d' spouseid='%d' />\n" %
+              (c, self.data[y1][x1].upn))
+
+        if (n.label != ""):
+          label = n.label
+          label = label.replace("'", '"')
+          label = label.replace("&", '&amp;')
+          fp.write("<DATA>\n")
+          fp.write("  <FIELD fieldid='1' value='%s' />\n" % label)
+          fp.write("</DATA>\n")
+
+        if n.parents != None:
+          (x1, y1, x2, y2) = n.parents
+          fp.write("<PARENTS ")
+
+          if x1 != None and y1 != None:
+            if self.data[y1][x1].gender == 'male':
+              fp.write("fatherid='%d' " % self.data[y1][x1].upn)
+            else:
+              fp.write("motherid='%d' " % self.data[y1][x1].upn)
+
+          if x2 != None and y2 != None:
+            if self.data[y2][x2].gender == 'male':
+              fp.write("fatherid='%d' " % self.data[y2][x2].upn)
+            else:
+              fp.write("motherid='%d' " % self.data[y2][x2].upn)
+
+          fp.write("/>\n")
+
+        fp.write("</INDIVIDUAL>\n")
+
+    fp.write("  </FAMILY> \n")
+    fp.write("</PROGENYPEDIGREE>\n")
+    fp.close()
+
   def save(self, x, y):
     s = state(str(datetime.date.today()), self.data, self.unions,
               x, y, text=self.text)
@@ -402,7 +548,7 @@ class pedigree:
     else:
       while 1:
         out("Enter filename to save pedigree:")
-        filename = self.readline()
+        filename = self.readline(self.filename)
         if filename=="":
           out("No filename specified, so I will not save.")
           return
@@ -416,6 +562,7 @@ class pedigree:
     fp.close()
     self.push("saving %s" % filename, x, y)
     self.dirty = False
+    self.savexml(filename)
     success = self.plot(filename)
     if success == "ERROR":
       out("Data file was saved, but PDF was not saved.")
@@ -857,7 +1004,7 @@ class pedigree:
 
   def edit(self, x, y):
     out("Enter a new description for %d %d." % (y, x+1))
-    line = self.readline()
+    line = self.readline(self.data[y][x].label)
     self.data[y][x].label = line
     self.push("changing description of %d %d to %s" % (y, x+1, line), x, y)
     self.describe(x, y)
@@ -937,7 +1084,7 @@ class pedigree:
     for i in range(len(row)-1, x, -1):
       self.move(i-1,y,i,y)
 
-  def readline(self, initial_line = ""):
+  def stupid_readline(self, initial_line = ""):
     line = initial_line
     out1(line)
     while 1:
@@ -952,6 +1099,9 @@ class pedigree:
       elif c!=None:
         out1(c)
         line = line + c
+
+  def readline(self, initial_line = ""):
+    return readline_wrapper(initial_line)
 
   def ask(self, prompt):
     out(prompt)
@@ -980,6 +1130,37 @@ class pedigree:
       out("Sorry, row %d has only %d people." % (y, len(self.data[y])))
       return None
     return (x-1, y)
+
+  def grabchild(self, x, y):
+    # Check that this isn't the last row
+    if (y - 1) >= len(self.data) - 1:
+      out("No children in the next row.")
+      return None
+
+    parents_str = "%d %d" % (y, x + 1)
+    parents = (x, y, None, None)
+
+    for (x1, y1, x2, y2) in self.unions:
+      if x1==x and y1==y:
+        parents = (x1, y1, x2, y2)
+        parents_str = "%d %d and %d %d" % (y1, x1 + 1, y2, x2 + 1)
+      if x2==x and y2==y:
+        parents = (x1, y1, x2, y2)
+        parents_str = "%d %d and %d %d" % (y1, x1 + 1, y2, x2 + 1)
+
+    # Next row, where we'll grab the child
+    row = self.data[y + 1]
+    found = False
+    for x0 in range(len(row)):
+      if row[x0].parents == None and not found:
+        out("Grabbing %d %d as a child of %s" % (y + 1, x0 + 1, parents_str))
+        row[x0].parents = parents
+        self.push("grabbing %d %d as child of %d %d" %
+                  (y + 1, x0+1, y, x+1), x, y)
+        found = True
+    if not found:
+      out("None of the children in the next row are parentless.")
+    return
 
   def parents(self, x, y):
     if y==1:
@@ -1305,7 +1486,7 @@ class pedigree:
           nchild = True
         if len(row[x].label) > LARGE_LABEL_CHARS:
 	  spacing += EXTRA_LARGE_HORIZONTAL_SPACE
-        elif len(row[x].label) > MED_LABEL_CHARS:
+        elif row[x].proband or len(row[x].label) > MED_LABEL_CHARS:
           spacing += EXTRA_MED_HORIZONTAL_SPACE
         if x == 0 or nchild:
           # Xoff doesn't matter at the beginning of the line, or when
@@ -1956,6 +2137,8 @@ class pedigree:
           self.union(x, y)
         elif c=='p':
           self.parents(x, y)
+        elif c=='g':
+          self.grabchild(x, y)
         elif c=='P':
           if x >= 0 and x < len(row):
             row[x].pregnancy = not row[x].pregnancy
@@ -2052,9 +2235,11 @@ class pedigree:
             self.describe(x, y)
         elif c=='t':
           out("Enter the text to go at the top of the page.")
-          new_text = self.readline()
+          new_text = self.readline(self.text)
           if new_text != None:
             self.text = new_text
+            out("The new text at the top of the page is:")
+            out(self.text)
             self.describe(x, y)
         elif c=='n':
           if self.dirty:
@@ -2170,8 +2355,15 @@ if __name__=="__main__":
       print "Connection closed."
       print
   else:
-    if not windows:
+    if windows:
+      for linecount in range(25):
+        print
+    else:
+      global g_buffered_termios
+      global g_raw_termios
+      g_buffered_termios = termios.tcgetattr(sys.stdin)
       tty.setraw(sys.stdin)
+      g_raw_termios = termios.tcgetattr(sys.stdin)
     try:
       p = pedigree()
       if filename:
