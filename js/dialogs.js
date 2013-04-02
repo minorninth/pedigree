@@ -22,10 +22,10 @@ pedigree.createDialog = function() {
 
 pedigree.addCloseButton = function(parent, title) {
   var button = document.createElement('button');
-  button.innerText = title;
-  button.addEventListener('click', function() {
+  button.innerHTML = title;
+  addEventListenerWrap(button, 'click', function() {
     pedigree.closeDialog();
-  }, false);
+  });
   parent.appendChild(button);
   return button;    
 };
@@ -46,32 +46,47 @@ pedigree.trapFocusInDialog = function(dialog, firstControl, lastControl) {
         }
         t = t.parentElement;
       }
-      console.log('Focus listener: inDialog=' + inDialog);
       if (!inDialog) {
         firstControl.focus();
       }
     }, 0);
   };
-  document.addEventListener('focus', pedigree.dialogFocusListener, true);
-  document.addEventListener('blur', pedigree.dialogFocusListener, true);
+  addEventListenerWrap(document, 'focus', pedigree.dialogFocusListener, true);
+  addEventListenerWrap(document, 'blur', pedigree.dialogFocusListener, true);
+  addEventListenerWrap(document, 'focusout', pedigree.dialogFocusListener, true);
 
   var sentinel = document.createElement('div');
   sentinel.tabIndex = 0;
   sentinel.style.position = 'relative';
   sentinel.style.left = '-9999px';
-  sentinel.addEventListener('focus', function() {
+
+  addEventListenerWrap(sentinel, 'focus', function() {
     lastControl.focus();
-  }, false);
+  });
   dialog.appendChild(sentinel);
 };
 
-pedigree.closeDialogOnEscape = function() {
+pedigree.addStandardDialogKeydownHandler = function() {
   pedigree.dialogKeydownListener = function(evt) {
+    if (!pedigree.dialogOpen) {
+      return;
+    }
     if (evt.keyCode == 27) { // Escape
       pedigree.closeDialog();
     }
+    var text = pedigree.dialogOpen.querySelectorAll('input,textarea');
+    if (text.length) {
+      return;
+    }
+    var buttons = pedigree.dialogOpen.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      console.log('Button ' + i + ': ' + buttons[i].innerHTML.charCodeAt(0));
+      if (evt.keyCode == buttons[i].innerHTML.charCodeAt(0)) {
+        buttons[i].click();
+      }
+    }
   };
-  window.addEventListener('keydown', pedigree.dialogKeydownListener, true);
+  addEventListenerWrap(window, 'keydown', pedigree.dialogKeydownListener, true);
 };
 
 pedigree.closeDialog = function() {
@@ -81,9 +96,9 @@ pedigree.closeDialog = function() {
   }
 
   pedigree.dialogOpen.parentElement.removeChild(pedigree.dialogOpen);
-  window.removeEventListener('focus', pedigree.dialogFocusListener, true);
-  window.removeEventListener('blur', pedigree.dialogFocusListener, true);
-  window.removeEventListener('keydown', pedigree.dialogKeydownListener, true);
+  removeEventListenerWrap(window, 'focus', pedigree.dialogFocusListener, true);
+  removeEventListenerWrap(window, 'blur', pedigree.dialogFocusListener, true);
+  removeEventListenerWrap(window, 'keydown', pedigree.dialogKeydownListener, true);
 
   pedigree.dialogOpen = null;
 
@@ -104,38 +119,38 @@ pedigree.textareaDialog = function(
   dialog.appendChild(textLabel);
 
   var textDiv = document.createElement('div');
-  textDiv.innerText = question;
+  textDiv.innerHTML = question;
   textLabel.appendChild(textDiv);
 
   var textarea = document.createElement('textarea');
+  textarea.setAttribute('rows', '5');
   textarea.value = initialText;
-  textarea.addEventListener('keydown', function(evt) {
+  addEventListenerWrap(textarea, 'keydown', function(evt) {
     if (evt.keyCode == 13) {
       var result = textarea.value;
       pedigree.closeDialog();
       callback(result);
-      evt.stopPropagation();
-      evt.preventDefault();
+      cancelEventWrap(evt);
     }
-  }, false);
+  });
   textLabel.appendChild(textarea);
 
   var buttonRow = document.createElement('div');
   dialog.appendChild(buttonRow);
 
   var ok = document.createElement('button');
-  ok.innerText = 'OK';
-  ok.addEventListener('click', function() {
+  ok.innerHTML = 'OK';
+  addEventListenerWrap(ok, 'click', function() {
     var result = textarea.value;
     pedigree.closeDialog();
     callback(result);
-  }, false);
+  });
   buttonRow.appendChild(ok);
 
   var cancel = pedigree.addCloseButton(buttonRow, 'Cancel');
 
   pedigree.trapFocusInDialog(dialog, textarea, cancel);
-  pedigree.closeDialogOnEscape();
+  pedigree.addStandardDialogKeydownHandler();
 
   dialog.style.display = 'block';
 
@@ -152,7 +167,7 @@ pedigree.coordinatesDialog = function(
   dialog.appendChild(textLabel);
 
   var textDiv = document.createElement('div');
-  textDiv.innerText = question;
+  textDiv.innerHTML = question;
   textLabel.appendChild(textDiv);
 
   function parseValue(str) {
@@ -179,7 +194,7 @@ pedigree.coordinatesDialog = function(
 
   var textbox = document.createElement('input');
   textbox.type = 'text';
-  textbox.addEventListener('keydown', function(evt) {
+  addEventListenerWrap(textbox, 'keydown', function(evt) {
     if (evt.keyCode == 13) {
       var result = parseValue(textbox.value);
       pedigree.closeDialog();
@@ -187,37 +202,37 @@ pedigree.coordinatesDialog = function(
         callback(result);
       }
     }
-  }, false);
+  });
   textLabel.appendChild(textbox);
 
   var buttonRow = document.createElement('div');
   dialog.appendChild(buttonRow);
 
   var ok = document.createElement('button');
-  ok.innerText = 'OK';
-  ok.addEventListener('click', function() {
+  ok.innerHTML = 'OK';
+  addEventListenerWrap(ok, 'click', function() {
     var result = parseValue(textbox.value);
     pedigree.closeDialog();
     if (result && validate(result)) {
       callback(result);
     }
-  }, false);
+  });
   buttonRow.appendChild(ok);
 
   var cancel = pedigree.addCloseButton(buttonRow, 'Cancel');
 
   pedigree.trapFocusInDialog(dialog, textbox, cancel);
-  pedigree.closeDialogOnEscape();
+  pedigree.addStandardDialogKeydownHandler();
 
   var result = parseValue(textbox.value);
   ok.disabled = !result || !validate(result);
 
-  textbox.addEventListener('keydown', function(evt) {
+  addEventListenerWrap(textbox, 'keydown', function(evt) {
     window.setTimeout(function() {
       var result = parseValue(textbox.value);
       ok.disabled = !result || !validate(result);
     }, 0);
-  }, false);
+  });
 
   dialog.style.display = 'block';
 
@@ -230,7 +245,7 @@ pedigree.messageDialog = function(message) {
   var dialog = pedigree.createDialog();
 
   var textDiv = document.createElement('h2');
-  textDiv.innerText = message;
+  textDiv.innerHTML = message;
   dialog.appendChild(textDiv);
 
   var buttonRow = document.createElement('div');
@@ -239,7 +254,7 @@ pedigree.messageDialog = function(message) {
   var ok = pedigree.addCloseButton(buttonRow, 'OK');
 
   pedigree.trapFocusInDialog(dialog, ok, ok);
-  pedigree.closeDialogOnEscape();
+  pedigree.addStandardDialogKeydownHandler();
 
   dialog.style.display = 'block';
 
@@ -255,40 +270,40 @@ pedigree.yesNoDialog = function(
   var dialog = pedigree.createDialog();
 
   var textDiv = document.createElement('h2');
-  textDiv.innerText = question;
+  textDiv.innerHTML = question;
   dialog.appendChild(textDiv);
 
   var buttonRow = document.createElement('div');
   dialog.appendChild(buttonRow);
 
   var yes = document.createElement('button');
-  yes.innerText = yesText;
-  yes.addEventListener('click', function() {
+  yes.innerHTML = yesText;
+  addEventListenerWrap(yes, 'click', function() {
     pedigree.closeDialog();
     yesCallback();
-  }, false);
+  });
   buttonRow.appendChild(yes);
 
   var no = document.createElement('button');
-  no.innerText = noText;
-  no.addEventListener('click', function() {
+  no.innerHTML = noText;
+  addEventListenerWrap(no, 'click', function() {
     pedigree.closeDialog();
     noCallback();
-  }, false);
+  });
   buttonRow.appendChild(no);
 
   if (maybeText) {
     var maybe = document.createElement('button');
-    maybe.innerText = maybeText;
-    maybe.addEventListener('click', function() {
+    maybe.innerHTML = maybeText;
+    addEventListenerWrap(maybe, 'click', function() {
       pedigree.closeDialog();
       maybeCallback();
-    }, false);
+    });
     buttonRow.appendChild(maybe);
   }
 
   pedigree.trapFocusInDialog(dialog, yes, maybe ? maybe : no);
-  pedigree.closeDialogOnEscape();
+  pedigree.addStandardDialogKeydownHandler();
 
   dialog.style.display = 'block';
 

@@ -20,19 +20,25 @@ function assertEquals(s1, s2) {
   }
 }
 
-function out(s) {
+window.out = function(s) {
   console.log(s);
-}
+};
+
+var VERBOSE = false;
 
 function verbose(s) {
-  console.log(s);
+  if (VERBOSE)
+    console.log(s);
 }
 
 function sort_numerical_ascending(x, y) {
   return x - y;
 }
 
-var VERBOSE = true;
+function PedigreeException(message) {
+  console.log('Throwing PedigreeException: ' + message);
+  this.message = message;
+}
 
 var LARGE_LABEL_CHARS = 50;   // A node with more than this many chars gets
                               // twice as much horizontal space for its text
@@ -48,7 +54,6 @@ var EXTRA_LARGE_HORIZONTAL_SPACE = 7.0;
 
 var MIN_VERTICAL_SPACE           = 2.5;
 
-var SCALE = 20;
 var MARGIN = 12;
 var TOP = 44;
 var LEFT = 88;
@@ -80,8 +85,6 @@ pedigree.Node = function(genderOrSourceJsonObject) {
   }
 
   this.gender = src.gender;
-  console.log('gender: ' + src.gender);
-  //assert(pedigree.isValidGender(src.gender));
 
   this.affected = pedigree.initWithDefault(src.affected, false);
   this.carrier = pedigree.initWithDefault(src.carrier, false);
@@ -139,24 +142,30 @@ pedigree.Pedigree.prototype.push = function(action, x, y) {
     this.redo_history = [];
   }
   this.dirty = true;
+  console.log('PUSH "' + action + '": length=' + this.undo_history.length + ': ' +
+              this.describe_all());
 };
 
 pedigree.Pedigree.prototype.loadstate = function(s) {
   this.data = {};
   this.text = s.text;
   for (var y in s.data) {
-    this.data[y] = s.data[y];
+    this.data[y] = [];
+    for (var i = 0; i < s.data[y].length; i++) {
+      this.data[y].push(new pedigree.Node(s.data[y][i]));
+    }
   }
   this.unions = [];
   for (var i = 0; i < s.unions.length; i++) {
     this.unions.push(s.unions[i]);
   }
+  console.log('After loadstate: ' + this.describe_all());
   return s;
 };
 
 pedigree.Pedigree.prototype.undo = function() {
   if (this.undo_history.length <= 1) {
-    out("Nothing to undo.");
+    throw new PedigreeException("Nothing to undo.");
     return null;
   }
 
@@ -168,13 +177,13 @@ pedigree.Pedigree.prototype.undo = function() {
 
 pedigree.Pedigree.prototype.redo = function() {
   if (this.redo_history == []) {
-    out("Nothing to redo.");
+    throw new PedigreeException("Nothing to redo.");
     return null;
   }
 
   var s = this.redo_history.pop();
   this.undo_history.push(s);
-  out('Redoing ' + a.action);
+  out('Redoing ' + s.action);
   return this.loadstate(s);
 };
 
@@ -292,8 +301,9 @@ pedigree.Pedigree.prototype.addnode = function(n, x, y) {
 
 pedigree.Pedigree.prototype.grabchild = function(x, y) {
   // Check that this isn't the last row.
-  if (y - 1 >= this.data.length - 1) {
-    out('No children in the next row.');
+  if (this.data[y + 1] == undefined ||
+      this.data[y + 1].length == 0) {
+    throw new PedigreeException('No children in the next row.');
     return;
   }
 
@@ -323,11 +333,11 @@ pedigree.Pedigree.prototype.grabchild = function(x, y) {
     this.push('grabbing ' + (y + 1) + ' ' + (x0 + 1) +
               ' as a child of ' + parents_str);
     found = true;
-    this.replot();
   }
 
   if (!found) {
-    out('None of the children in the next row are parentless.');
+    throw new PedigreeException(
+        'None of the children in the next row are parentless.');
   }
 };
 
@@ -950,110 +960,39 @@ pedigree.Pedigree.prototype.segments_intersect = function(a0, a1, b0, b1) {
   return (aL <= bR && aR >= bL);
 };
 
-pedigree.Pedigree.prototype.makerowmarker = function(y, robj) {
-  var element = document.createElement('div');
-  element.id = 'r' + y;
-  element.tabIndex = -1;
-  var Y = robj.Y;
-  var X = -1.5;
-  var left = (SCALE * X - MARGIN) + LEFT;
-  var top = (SCALE * Y - MARGIN) + TOP;
-  element.style['left'] = left + 'px';
-  element.style['top'] = top + 'px';
-  element.className = 'scale' + SCALE + ' rowmarker';
-  element.setAttribute('px', '0');
-  element.setAttribute('py', y);
-  element.setAttribute('role', 'gridcell');
-
-  var text = document.createElement('div');
-  text.setAttribute('aria-hidden', 'true');
-  text.innerText = y;
-  element.appendChild(text);
-
-  var accessible_label = document.createElement('div');
-  accessible_label.className = 'accessible_label';
-  accessible_label.innerText = 'Beginning of row ' + y +
-      ' with ' + this.data[y].length + ' items';
-  element.appendChild(accessible_label);
-
-  return element;
+// Step 2: Calculate text extent for each node
+pedigree.Pedigree.prototype.textwidth = function(s) {
+  return s.length * 5.7;
 };
 
-pedigree.Pedigree.prototype.makeperson = function(n, x, y, X, Y, coords) {
-  var element = document.createElement('div');
-  element.tabIndex = -1;
-  var left = (SCALE * (X + 2.0) - MARGIN) + LEFT;
-  var top = (SCALE * Y - MARGIN) + TOP;
-  element.style['left'] = left + 'px';
-  element.style['top'] = top + 'px';
-  element.classList.add('scale' + SCALE); 
-  element.setAttribute('px', x);
-  element.setAttribute('py', y);
-  element.setAttribute('role', 'gridcell');
-  if (n.multiple == 0) {
-    element.classList.add('nonexistant');
-  } else {
-    element.classList.add(n.gender);
-    if (n.affected) {
-      element.classList.add('affected');
+pedigree.Pedigree.prototype.splittext = function(text, max_width) {
+  var lines = [];
+  var tokens = text.split(' ');
+  var line = tokens.shift();
+  while (tokens.length > 0) {
+    while (this.textwidth(line + ' ' + tokens[0]) < max_width) {
+      if (line.length > 0 && line[line.length - 1] == ';')
+        break;
+      line += ' ' + tokens.shift();
+      if (tokens.length == 0)
+        break;
     }
-    if (n.carrier) {
-      element.classList.add('carrier');
-      var carrier_dot = document.createElement('div');
-      carrier_dot.className = 'carrier_dot';
-      element.appendChild(carrier_dot);
+    if (tokens.length == 0)
+      break;
+    if (line.length > 0 && line[line.length - 1] == ';') {
+      line = line.substr(0, line.length - 1);
     }
-    if (n.proband) {
-      element.classList.add('proband');
-      var proband_arrow = document.createElement('div');
-      proband_arrow.className = 'proband_arrow';
-      element.appendChild(proband_arrow);
-    }
-    if (n.dead) {
-      element.classList.add('dead');
-      var dead_slash = document.createElement('div');
-      dead_slash.className = 'dead_slash';
-      element.appendChild(dead_slash);      
-    }
+    lines.push(line);
+    line = tokens.shift();
   }
-
-  var highlight = document.createElement('div');
-  highlight.className = 'highlight';
-  element.appendChild(highlight);
-
-  var coords_label = document.createElement('div');
-  coords_label.className = 'coords';
-  coords_label.innerText = coords;
-  coords_label.setAttribute('aria-hidden', 'true');
-  element.appendChild(coords_label);
-
-  var ctr_label = document.createElement('div');
-  ctr_label.className = 'ctr_label';
-  ctr_label.setAttribute('aria-hidden', 'true');
-  element.appendChild(ctr_label);
-  if (n.pregnancy) {
-    ctr_label.innerText = 'P';
-  } else if (n.multiple == 10) {
-    ctr_label.innerText = 'n';
-  } else if (n.multiple > 1) {
-    ctr_label.innerText = n.multiple;
+  if (line.length > 0 && line[line.length - 1] == ';') {
+    line = line.substr(0, line.length - 1);
   }
-
-  var text_label = document.createElement('div');
-  text_label.className = 'text_label';
-  text_label.innerText = n.label;
-  text_label.setAttribute('aria-hidden', 'true');
-  element.appendChild(text_label);
-
-  var accessible_label = document.createElement('div');
-  accessible_label.className = 'accessible_label';
-  accessible_label.innerText = this.describe(x, y);
-  element.appendChild(accessible_label);
-
-  return element;
+  lines.push(line);
+  return lines;
 };
 
-pedigree.Pedigree.prototype.plot = function(doc, container) {
+pedigree.Pedigree.prototype.plot = function() {
   var rows = [];
   for (var row_index in this.data) {
     rows.push(parseInt(row_index, 10));
@@ -1080,45 +1019,13 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
         var x2 = n.parents[2];
         var y2 = n.parents[3];
         if ((y1 != null && y1 != y - 1) || (y2 != null && y2 != y - 1)) {
-          out('A parent of ' + y + ' ' + (x + 1) +
-              ' is not in the row above.');
-          out('Cannot layout.');
+          throw new PedigreeException(
+              'A parent of ' + y + ' ' + (x + 1) +
+              ' is not in the row above, cannot draw this.');
           return false;
         }
       }
     }
-  }
-
-  // Step 2: Calculate text extent for each node
-  function textwidth(s) {
-    return s.length * 5.7;
-  }
-
-  function splittext(text, max_width) {
-    var lines = [];
-    var tokens = text.split(' ');
-    var line = tokens.shift();
-    while (tokens.length > 0) {
-      while (textwidth(line + ' ' + tokens[0]) < max_width) {
-        if (line.length > 0 && line[line.length - 1] == ';')
-          break;
-        line += ' ' + tokens.shift();
-        if (tokens.length == 0)
-          break;
-      }
-      if (tokens.length == 0)
-        break;
-      if (line.length > 0 && line[line.length - 1] == ';') {
-        line = line.substr(0, line.length - 1);
-      }
-      lines.push(line);
-      line = tokens.shift();
-    }
-    if (line.length > 0 && line[line.length - 1] == ';') {
-      line = line.substr(0, line.length - 1);
-    }
-    lines.push(line);
-    return lines;
   }
 
   for (row_index = 0; row_index < rows.length; row_index++) {
@@ -1131,9 +1038,9 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
         continue;
       }
       if (n.label.length > LARGE_LABEL_CHARS) {
-        n.label_lines = splittext(n.label, 140);
+        n.label_lines = this.splittext(n.label, 140);
       } else {
-        n.label_lines = splittext(n.label, 80);
+        n.label_lines = this.splittext(n.label, 80);
       }
     }
   }
@@ -1151,9 +1058,9 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
     var x2 = u[2];
     var y2 = u[3];
     if (y1 != y2) {
-      out(y1 + ' ' + (x1 + 1) + ' is in union with ' +
+      throw new PedigreeException(
+          y1 + ' ' + (x1 + 1) + ' is in union with ' +
           y2 + ' ' + (x2 + 1) + ' in a different row.');
-      out('Cannot layout.');
       return false;
     }
     if (x1 > x2) {
@@ -1162,9 +1069,9 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
       x2 = tmp;
     }
     if (x2 != x1 + 1) {
-      out(y1 + ' ' + (x1 + 1) + ' is in union with ' +
+      throw new PedigreeException(
+          y1 + ' ' + (x1 + 1) + ' is in union with ' +
           y2 + ' ' + (x2 + 1) + ', but they are not adjacent.');
-      out('Cannot layout.');
       return false;
     }
     var uobj = {};
@@ -1237,8 +1144,14 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
           var child = this.data[y + 1][c1];
           for (ci2 = 0; ci2 < uobj.children.length; ci2++) {
             var c2 = uobj.children[ci2];
+
+
             if (child.siblings.indexOf(c2) == -1) {
+
+
               child.siblings.push(c2);
+
+
             }
           }
         }
@@ -1336,12 +1249,12 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
         }
       }
 
-      out('Sorry, it is not possible to layout this pedigree.');
+      var errStr = 'Sorry, it is not possible to layout this pedigree. ';
       var found_count = 0;
       var ymax = -1;
       var found_x = 0;
       var found_y = 0;
-      for (var move_i = 0; move_i < sanity_moves.length; move_i++) {
+      for (move_i = 0; move_i < sanity_moves.length; move_i++) {
         var move = sanity_moves[move_i];
         var move_key = move.join(',');
         var count = sanmap[move_key];
@@ -1361,10 +1274,10 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
         }
       }
       if (found_count == 1) {
-        out('The problem appears to be near ' + found_y + ' ' + (found_x + 1) +
-           ', hope that helps.');
+        errStr += 'The problem appears to be near ' +
+                  found_y + ' ' + (found_x + 1) + '.';
       }
-      return 'ERROR';
+      throw new PedigreeException(errStr);
     }
 
     // Reset positions
@@ -1376,7 +1289,7 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
       }
     }
 
-    var Xmax = 0;
+    this.Xmax = 0;
     var ok = true;
 
     // Lay out from bottom up.
@@ -1502,8 +1415,8 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
         verbose('  default complete, moved to ' + n.X);
         continue;
       }
-      if (X + 5 > Xmax) {
-        Xmax = X + 5;
+      if (X + 5 > this.Xmax) {
+        this.Xmax = X + 5;
       }
     }
     if (ok) {
@@ -1719,7 +1632,7 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
     robj.num_sibling_lines = 0;
     Y += robj.height;
   }
-  var Ymax = Y;
+  this.Ymax = Y;
 
   // Debug: print everyone's position
   if (VERBOSE) {
@@ -1735,16 +1648,421 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
       }
     }
   }
+};
+
+pedigree.Pedigree.prototype.html_makediagonalline = function(element, x0, y0, x1, y1) {
+  if (x1 < x0) {
+    var tmp = x0;
+    x0 = x1;
+    x1 = tmp;
+    tmp = y0;
+    y0 = y1;
+    y1 = tmp;
+  }
+  element.className = 'diagonal_line';
+  var length = Math.sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
+  element.style.width = length + 'px';
+  if (element.style.MozTransform != undefined ||
+      element.style.WebkitTransform != undefined ||
+      element.style.OTransform != undefined ||
+      element.style.transform != undefined) {
+    var angle = Math.atan((y1 - y0) / (x1 - x0));
+    element.style.top = y0 + 0.5 * length * Math.sin(angle) + 'px';
+    element.style.left = x0 - 0.5 * length * (1 - Math.cos(angle)) + 'px';
+    element.style.MozTransform = 'rotate(' + angle + 'rad)';
+    element.style.WebkitTransform = 'rotate(' + angle + 'rad)';
+    element.style.OTransform = 'rotate(' + angle + 'rad)';
+  } else {
+    // IE.
+    element.style.top = (y1 > y0) ? y0 + 'px' : y1 + 'px';
+    element.style.left = x0 + 'px';
+    var nCos = (x1-x0)/length;
+    var nSin = (y1-y0)/length;
+    element.style.filter =
+        'progid:DXImageTransform.Microsoft.Matrix(' +
+        'sizingMethod="auto expand", ' +
+        'M11=' + nCos + ', M12=' + -1*nSin +
+        ', M21=' + nSin + ', M22=' + nCos + ')';
+  }
+};
+
+pedigree.Pedigree.prototype.html_makeline = function(x0, x1, y0, y1, debug_label) {
+  verbose('makeline ' + x0 + ', ' + y0 + ' : ' + x1 + ', ' + y1 +
+          ' ' + debug_label);
+  var element = this.doc.createElement('div');
+  if (debug_label) {
+    element.setAttribute('name', debug_label);
+  }
+  if (y0 == y1) {
+    if (x1 < x0) {
+      var tmp = x1;
+      x1 = x0;
+      x0 = tmp;
+    }
+    element.className = 'hline';
+    element.style['left'] = (this.scale * x0 + this.leftOffset) + 'px';
+    element.style['top'] = (this.scale * y0 + this.topOffset) + 'px';
+    element.style['width'] = (this.scale * (x1 - x0)) + 'px';
+  } else if (x0 == x1) {
+    if (y1 < y0) {
+      var tmp = y1;
+      y1 = y0;
+      y0 = tmp;
+    }
+    element.className = 'vline';
+    element.style['left'] = (this.scale * x0 + this.leftOffset) + 'px';
+    element.style['top'] = (this.scale * y0 + this.topOffset) + 'px';
+    element.style['height'] = (this.scale * (y1 - y0)) + 'px';
+  } else {
+    this.makediagonalline(element,
+                      this.scale * x0 + this.leftOffset, this.scale * y0 + this.topOffset,
+                      this.scale * x1 + this.leftOffset, this.scale * y1 + this.topOffset);
+  }
+  this.container.appendChild(element);
+};
+
+pedigree.Pedigree.prototype.html_makerowcontainer = function(y, robj) {
+  var row_container = this.doc.createElement('div');
+  row_container.setAttribute('role', 'row');
+  row_container.className = 'row';
+  this.container.appendChild(row_container);
+  robj.rowmarker = this.makerowmarker(y, robj);
+  row_container.appendChild(robj.rowmarker);
+  return row_container;
+};
+
+pedigree.Pedigree.prototype.pdf_makeline = function(x0, x1, y0, y1, debug_label) {
+  verbose('makeline ' + x0 + ', ' + y0 + ' : ' + x1 + ', ' + y1 +
+          ' ' + debug_label);
+  var xx0 = (this.scale * x0 - this.margin) + this.leftOffset;
+  var yy0 = (this.scale * y0 - this.margin) + this.topOffset;
+  var xx1 = (this.scale * x1 - this.margin) + this.leftOffset;
+  var yy1 = (this.scale * y1 - this.margin) + this.topOffset;
+
+  this.pdf.lines([[xx1 - xx0, yy1 - yy0]],
+                   xx0, yy0);
+};
+
+pedigree.Pedigree.prototype.pdf_makediagonalline = function(element, x0, y0, x1, y1) {
+  this.pdf_makeline(x0, x1, y0, y1, 'diagonal');
+};
+
+pedigree.Pedigree.prototype.pdf_makerowcontainer = function(y, robj) {
+  return null;
+};
+
+pedigree.Pedigree.prototype.makechildlines = function(
+    Xtop, Ytop, Xcenter, Yparent, Ysibling, Ychild, children, debug_label) {
+  verbose('makechildlines ' + debug_label);
+  // Parent to center of sibling line
+  this.makeline(Xtop, Xtop, Ytop, Yparent, debug_label + ' A');
+  this.makeline(Xtop, Xcenter, Yparent, Yparent, debug_label + ' B');
+  this.makeline(Xcenter, Xcenter, Yparent, Ysibling, debug_label + ' C');
+  // Sibling line
+  var siblingLeft = children[0].X;
+  var siblingRight = children[children.length - 1].X;
+  if (children.length > 1) {
+    if (children[0].twin) {
+      siblingLeft = 0.5 * (children[0].X + children[1].X);
+    }
+    if (children[children.length - 2].twin) {
+      siblingRight = 0.5 * (children[children.length - 2].X +
+                            children[children.length - 1].X);
+    }
+    this.makeline(2.5 + siblingLeft, 2.5 + siblingRight,
+                  Ysibling, Ysibling, debug_label + ' D');
+  }
+  // Lines from the sibling line to each child
+  for (var i = 0; i < children.length; i++) {
+    var c = children[i];
+    if (c.multiple == 0) {
+      this.makeline(2.0 + c.X, 3.0 + c.X,
+                    Ysibling, Ysibling,
+                    debug_label + ' S' + i);
+      continue;
+    }
+    if (c.twin && i + 1 < children.length) {
+      var topX = 0.5 * (c.X + children[i + 1].X);
+    } else if (i>0 && children[i - 1].twin) {
+      topX = 0.5 * (c.X + children[i - 1].X);
+    } else {
+      topX = c.X;
+    }
+    this.makeline(2.5 + topX, 2.5 + c.X,
+                  Ysibling, Ychild - 0.02,
+                  debug_label + ' S' + i);
+  }
+};
+
+pedigree.Pedigree.prototype.html_makerowmarker = function(y, robj) {
+  var element = this.doc.createElement('div');
+  element.id = 'r' + y;
+  element.tabIndex = -1;
+  var Y = robj.Y;
+  var X = -1.5;
+  var left = (this.scale * X - MARGIN) + this.leftOffset;
+  var top = (this.scale * Y - MARGIN) + this.topOffset;
+  element.style['left'] = left + 'px';
+  element.style['top'] = top + 'px';
+  element.className = 'scale' + this.scale + ' rowmarker';
+  element.setAttribute('px', '0');
+  element.setAttribute('py', y);
+  element.setAttribute('role', 'gridcell');
+
+  var text = this.doc.createElement('div');
+  text.setAttribute('aria-hidden', 'true');
+  text.innerHTML = y;
+  element.appendChild(text);
+
+  var accessible_label = this.doc.createElement('div');
+  accessible_label.className = 'accessible_label';
+  accessible_label.innerHTML = 'Beginning of row ' + y +
+      ' with ' + this.data[y].length + ' items';
+  element.appendChild(accessible_label);
+
+  return element;
+};
+
+pedigree.Pedigree.prototype.pdf_makerowmarker = function(y, robj) {
+  return null;
+};
+
+pedigree.Pedigree.prototype.html_maketitle = function() {
+  var element = this.doc.createElement('div');
+  element.id = 'title';
+  var left = this.leftOffset;
+  var top = this.topOffset;
+  element.style['left'] = this.leftOffset + 'px';
+  element.style['top'] = TOP + 'px';
+  for (var i = 0; i < this.text_lines.length; i++) {
+    element.appendChild(this.doc.createTextNode(this.text_lines[i]));
+    element.appendChild(this.doc.createElement('br'));
+  }
+  return element;
+};
+
+pedigree.Pedigree.prototype.pdf_maketitle = function() {
+  var scale = this.scale;
+  var left = 5.5 * 72;
+  var top = 0.75 * 72;
+  this.pdf.setFontSize(8);
+  for (var i = 0; i < this.text_lines.length; i++) {
+    var line = this.text_lines[i];
+    var width = 7 * this.pdf.getStringUnitWidth(line);
+    this.pdf.text(line, left - width / 2, top + i * scale);
+  }
+  return null;
+};
+
+pedigree.Pedigree.prototype.html_makeperson = function(n, x, y, X, Y, coords) {
+  var element = this.doc.createElement('div');
+  element.tabIndex = -1;
+  var left = (this.scale * (X + 2.0) - MARGIN) + this.leftOffset;
+  var top = (this.scale * Y - MARGIN) + this.topOffset;
+  element.style['left'] = left + 'px';
+  element.style['top'] = top + 'px';
+  var classes = [];
+  classes.push('scale' + this.scale); 
+  element.setAttribute('px', x);
+  element.setAttribute('py', y);
+  element.setAttribute('role', 'gridcell');
+  if (n.multiple == 0) {
+    classes.push('nonexistant');
+  } else {
+    classes.push(n.gender);
+    if (n.affected) {
+      classes.push('affected');
+    }
+    if (n.carrier) {
+      classes.push('carrier');
+      var carrier_dot = this.doc.createElement('div');
+      carrier_dot.className = 'carrier_dot';
+      element.appendChild(carrier_dot);
+    }
+    if (n.proband) {
+      classes.push('proband');
+      var proband_arrow = this.doc.createElement('div');
+      proband_arrow.className = 'proband_arrow';
+      element.appendChild(proband_arrow);
+    }
+    if (n.dead) {
+      classes.push('dead');
+      var dead_slash = this.doc.createElement('div');
+      dead_slash.className = 'dead_slash';
+      element.appendChild(dead_slash);      
+    }
+  }
+
+  element.className = classes.join(' ');
+
+  var highlight = this.doc.createElement('div');
+  highlight.className = 'highlight';
+  element.appendChild(highlight);
+
+  var coords_label = this.doc.createElement('div');
+  coords_label.className = 'coords';
+  coords_label.innerHTML = coords;
+  coords_label.setAttribute('aria-hidden', 'true');
+  element.appendChild(coords_label);
+
+  var ctr_label = this.doc.createElement('div');
+  ctr_label.className = 'ctr_label';
+  ctr_label.setAttribute('aria-hidden', 'true');
+  element.appendChild(ctr_label);
+  if (n.pregnancy) {
+    ctr_label.innerHTML = 'P';
+  } else if (n.multiple == 10) {
+    ctr_label.innerHTML = 'n';
+  } else if (n.multiple > 1) {
+    ctr_label.innerHTML = n.multiple;
+  }
+
+  var text_label = this.doc.createElement('div');
+  text_label.className = 'text_label';
+  var text = this.doc.createTextNode(n.label);
+  text_label.appendChild(text);
+  text_label.setAttribute('aria-hidden', 'true');
+  element.appendChild(text_label);
+
+  var accessible_label = this.doc.createElement('div');
+  accessible_label.className = 'accessible_label';
+  accessible_label.innerHTML = this.describe(x, y);
+  element.appendChild(accessible_label);
+
+  return element;
+};
+
+pedigree.Pedigree.prototype.pdf_makeperson = function(
+    n, x, y, X, Y, coords) {
+  this.pdf.setLineWidth(0.5);
+  var scale = this.scale;
+  var WIDTH = 1 * this.scale;
+  var HEIGHT = 1 * this.scale;
+  var HALF = 0.5 * this.scale;
+  var left = (this.scale * (X + 2.0) - this.margin) + this.leftOffset;
+  var top = (this.scale * Y - this.margin) + this.topOffset;
+
+  if (n.affected) {
+    this.pdf.setFillColor(200);
+  } else {
+    this.pdf.setFillColor(255);
+  }
+
+  if (n.multiple != 0) {
+    if (n.gender == 'male') {
+      this.pdf.rect(left, top, WIDTH, HEIGHT, 'FD');
+    } else if (n.gender == 'female') {
+      this.pdf.circle(left + HALF, top + HALF, HALF, 'FD');
+    } else if (n.gender == 'nogender') {
+      this.pdf.triangle(left + HALF, top,
+                        left + WIDTH, top + HALF,
+                        left, top + HALF, 'F');
+      this.pdf.triangle(left + HALF, top + HEIGHT,
+                        left + WIDTH, top + HALF,
+                        left, top + HALF, 'F');
+      this.pdf.lines([[HALF, HALF], [-HALF, HALF], [-HALF, -HALF], [HALF, -HALF]],
+                     left + HALF, top);
+    } else if (n.gender == 'pregloss') {
+      this.pdf.triangle(left + HALF, top,
+                        left + WIDTH, top + HALF,
+                        left, top + HALF, 'FD');
+    }
+
+    if (n.dead) {
+      this.pdf.lines([[1.2 * scale, -1.2 * scale]],
+                     left - 0.1 * scale, top + 1.1 * scale);
+    }
+  }
+
+  this.pdf.setFontSize(7);
+  var ctr_label = '';
+  if (n.pregnancy) {
+    ctr_label = 'P';
+  } else if (n.multiple == 10) {
+    ctr_label = 'n';
+  } else if (n.multiple > 1) {
+    ctr_label = '' + n.multiple;
+  }
+  if (ctr_label) {
+    this.pdf.text(ctr_label, left + 0.3 * scale, top + 0.75 * scale);
+  }
+
+  if (n.label) {
+    for (var i = 0; i < n.label_lines.length; i++) {
+      var line = n.label_lines[i];
+      var width = 7 * this.pdf.getStringUnitWidth(line);
+      this.pdf.text(line, left + HALF - width / 2, top + 2 * scale + i * scale);
+    }
+  }
+
+  if (n.carrier) {
+    var R = WIDTH / 10.0;
+    this.pdf.setFillColor(0);
+    this.pdf.circle(left + HALF, top + HALF, R, 'FD');
+  }
+
+  if (n.proband) {
+    this.pdf.setLineWidth(1.0);
+    this.pdf.lines([[-1.0 * scale, 0.4 * scale]],
+                   left - 0.25 * scale, top + 0.65 * scale);
+    this.pdf.lines([[-0.35 * scale, -0.15 * scale]],
+                   left - 0.25 * scale, top + 0.65 * scale);
+    this.pdf.lines([[-0.15 * scale, 0.35 * scale]],
+                   left - 0.25 * scale, top + 0.65 * scale);
+    this.pdf.setLineWidth(1.0);
+  }
+};
+
+pedigree.Pedigree.prototype.renderHtml = function(doc, container) {
+  this.doc = doc;
+  this.container = container;
+  this.makediagonalline = this.html_makediagonalline;
+  this.makeline = this.html_makeline;
+  this.makerowcontainer = this.html_makerowcontainer;
+  this.makerowmarker = this.html_makerowmarker;
+  this.makeperson = this.html_makeperson;
+  this.maketitle = this.html_maketitle;
+  this.scale = 20;
+
+  this.text_lines = this.splittext(this.text, 600);
+  this.line_height = 0.2;
+  this.text_height = 1.1 * (this.text_lines.length + 1);
+
+  this.leftOffset = LEFT;
+  this.topOffset = TOP + this.scale * this.text_height;
+
+  this.render();
+};
+
+var inpdf = 0;
+
+pedigree.Pedigree.prototype.renderPdf = function() {
+  this.pdf = new jsPDF('landscape', 'pt', 'letter');
+
+/**
+  pdf.setProperties({
+    title: '',
+    subject: '',
+    author: '',
+    keywords: '',
+    creator: '',
+  });
+**/
+
+  this.makediagonalline = this.pdf_makediagonalline;
+  this.makeline = this.pdf_makeline;
+  this.makerowcontainer = this.pdf_makerowcontainer;
+  this.makerowmarker = this.pdf_makerowmarker;
+  this.makeperson = this.pdf_makeperson;
+  this.maketitle = this.pdf_maketitle;
 
   // Set up figure
   var Xmargin = 0.75;
   var Ymargin = 0.75;
-  var Xmin = 0.0;
-  var Ymin = 0.0;
 
-  var text_lines = splittext(this.text, 600);
+  this.text_lines = this.splittext(this.text, 600);
   var line_height_guess = 1.5;
-  var text_height_guess = 2.5 + line_height_guess * text_lines.length;
+  var text_height_guess = 2.5 + line_height_guess * this.text_lines.length;
 
   var pages = 1;
   var landscape = true;
@@ -1752,10 +2070,8 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
   var Ypage = 8.5;
   var Xinnerpage = Xpage - (2 * pages) * Xmargin;
   var Yinnerpage = Ypage - (2 * pages) * Ymargin;
-  var scale = Math.min(Xinnerpage / Xmax,
-                       Yinnerpage / (Ymax + text_height_guess));
-
-  verbose('Scale: ' + scale);
+  this.margin = 12;
+  this.scale = 10;
 
   //if scale < 0.1 && pages < 3 {
   //  // Return false, which forces the calling function
@@ -1763,136 +2079,40 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
   //  return false;
   // }
 
-  var line_height = 0.2 / scale;
-  var text_height = 2.5 + line_height * text_lines.length;
+  this.text_height = 1.2 * this.scale * (this.text_lines.length + 2);
 
-  var linewidth = 5 * scale;
+  this.leftOffset = LEFT;
+  this.topOffset = TOP + this.text_height;
+  alert('pdf 3');
+  inpdf = 1;
+  this.render();
+  inpdf = 0;
+  alert('pdf 4');
 
-  // Move text so that it's at the top of the page but leave
-  // everything else centered.
-  if (text_height < (Yinnerpage / scale - Ymax) / 2) {
-    text_height = (Yinnerpage / scale - Ymax) / 2;
+  if (this.Xmax * this.scale / 72. + (2 * Xmargin) > Xpage) {
+    this.pdf.addPage();
+    this.pdf.text('Page 2', 1 * 72, 1 * 72);
+    this.leftOffset = LEFT - 9 * 72;
+    this.render();
   }
 
-  // Draw the title text.
-  for (var l = 0; l < text_lines.length; l++) {
-    line = text_lines[l];
-    //text(Xmax/2.0, l * line_height - text_height, line, fontsize=10.0,
-    //     horizontalalignment='center',
-    //     verticalalignment='top');
-  }
+  console.log('Outputting the pdf');
+  var dataurl = this.pdf.output('datauristring');
+  console.log('Done outputting the pdf');
+  var w = window.open(dataurl, '_blank');
+};
 
-  function diagonalline(element, x0, y0, x1, y1) {
-    if (x1 < x0) {
-      var tmp = x0;
-      x0 = x1;
-      x1 = tmp;
-      tmp = y0;
-      y0 = y1;
-      y1 = tmp;
-    }
-    element.className = 'diagonal_line';
-    var length = Math.sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
-    element.style.width = length + 'px';
-    if (element.style.MozTransform != undefined ||
-        element.style.WebkitTransform != undefined ||
-        element.style.OTransform != undefined ||
-        element.style.transform != undefined) {
-      var angle = Math.atan((y1 - y0) / (x1 - x0));
-      element.style.top = y0 + 0.5 * length * Math.sin(angle) + 'px';
-      element.style.left = x0 - 0.5 * length * (1 - Math.cos(angle)) + 'px';
-      element.style.MozTransform = 'rotate(' + angle + 'rad)';
-      element.style.WebkitTransform = 'rotate(' + angle + 'rad)';
-      element.style.OTransform = 'rotate(' + angle + 'rad)';
-    } else {
-      // IE.
-      element.style.top = (y1 > y0) ? y0 + 'px' : y1 + 'px';
-      element.style.left = x0 + 'px';
-      var nCos = (x1-x0)/length;
-      var nSin = (y1-y0)/length;
-      element.style.filter =
-          'progid:DXImageTransform.Microsoft.Matrix(' +
-          'sizingMethod="auto expand", ' +
-          'M11=' + nCos + ', M12=' + -1*nSin +
-          ', M21=' + nSin + ', M22=' + nCos + ')';
-    }
+pedigree.Pedigree.prototype.render = function() {
+  var rows = [];
+  for (var row_index in this.data) {
+    rows.push(parseInt(row_index, 10));
   }
+  rows.sort(sort_numerical_ascending);
 
-  function makeline(x0, x1, y0, y1, debug_label) {
-    console.log('makeline ' + x0 + ', ' + y0 + ' : ' + x1 + ', ' + y1 +
-                ' ' + debug_label);
-    var element = document.createElement('div');
-    if (debug_label) {
-      element.setAttribute('name', debug_label);
-    }
-    if (y0 == y1) {
-      if (x1 < x0) {
-        var tmp = x1;
-        x1 = x0;
-        x0 = tmp;
-      }
-      element.className = 'hline';
-      element.style['left'] = (SCALE * x0 + LEFT) + 'px';
-      element.style['top'] = (SCALE * y0 + TOP) + 'px';
-      element.style['width'] = (SCALE * (x1 - x0)) + 'px';
-    } else if (x0 == x1) {
-      if (y1 < y0) {
-        var tmp = y1;
-        y1 = y0;
-        y0 = tmp;
-      }
-      element.className = 'vline';
-      element.style['left'] = (SCALE * x0 + LEFT) + 'px';
-      element.style['top'] = (SCALE * y0 + TOP) + 'px';
-      element.style['height'] = (SCALE * (y1 - y0)) + 'px';
-    } else {
-      diagonalline(element,
-                   SCALE * x0 + LEFT, SCALE * y0 + TOP,
-                   SCALE * x1 + LEFT, SCALE * y1 + TOP);
-    }
-    container.appendChild(element);
-  }
-
-  function makechildlines(
-      Xtop, Ytop, Xcenter, Yparent, Ysibling, Ychild, children, debug_label) {
-    console.log('makechildlines ' + debug_label);
-    // Parent to center of sibling line
-    makeline(Xtop, Xtop, Ytop, Yparent, debug_label + ' A');
-    makeline(Xtop, Xcenter, Yparent, Yparent, debug_label + ' B');
-    makeline(Xcenter, Xcenter, Yparent, Ysibling, debug_label + ' C');
-    // Sibling line
-    var siblingLeft = children[0].X;
-    var siblingRight = children[children.length - 1].X;
-    if (children.length > 1) {
-      if (children[0].twin) {
-        siblingLeft = 0.5 * (children[0].X + children[1].X);
-      }
-      if (children[children.length - 2].twin) {
-        siblingRight = 0.5 * (children[children.length - 2].X +
-                              children[children.length - 1].X);
-      }
-      makeline(2.5 + siblingLeft, 2.5 + siblingRight,
-               Ysibling, Ysibling, debug_label + ' D');
-    }
-    // Lines from the sibling line to each child
-    for (var i = 0; i < children.length; i++) {
-      var c = children[i];
-      if (c.multiple == 0) {
-        makeline(2.0 + c.X, 3.0 + c.X,
-                 Ysibling, Ysibling,
-                 debug_label + ' S' + i);
-        continue;
-      }
-      if (c.twin && i + 1 < children.length) {
-        var topX = 0.5 * (c.X + children[i + 1].X);
-      } else if (i>0 && children[i - 1].twin) {
-        topX = 0.5 * (c.X + children[i - 1].X);
-      } else {
-        topX = c.X;
-      }
-      makeline(2.5 + topX, 2.5 + c.X,
-               Ysibling, Ychild - 0.02,
-               debug_label + ' S' + i);
+  if (this.leftOffset > 0) {
+    var title_element = this.maketitle();
+    if (title_element) {
+      this.container.appendChild(title_element);
     }
   }
 
@@ -1901,21 +2121,20 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
     var y = rows[row_index];
     var row = this.data[y];
     var robj = this.rowobjs[y];
-    var row_container = doc.createElement('div');
-    row_container.setAttribute('role', 'row');
-    row_container.classList.add('row');
-    container.appendChild(row_container);
-    robj.rowmarker = this.makerowmarker(y, robj);
-    row_container.appendChild(robj.rowmarker);
+
+    var row_container = this.makerowcontainer(y, robj);
     for (var x = 0; x < row.length; x++) {
       var n = row[x];
-      n.element = this.makeperson(n, x, y, n.X, robj.Y, y + ' ' + (x + 1));
-      row_container.appendChild(n.element);
+      var element = this.makeperson(n, x, y, n.X, robj.Y, y + ' ' + (x + 1));
+      if (element) {
+        n.element = element;
+        row_container.appendChild(n.element);
+      }
       if (n.right_union != null) {
-        makeline(n.X + 3.0, row[x+1].X + 2.0,
-                 robj.Y + 0.5, robj.Y + 0.5,
-                 'Union of ' + y + ' ' + (x + 1) + ' and ' +
-                 y + ' ' + (x + 2));
+        this.makeline(n.X + 3.0, row[x+1].X + 2.0,
+                      robj.Y + 0.5, robj.Y + 0.5,
+                      'Union of ' + y + ' ' + (x + 1) + ' and ' +
+                      y + ' ' + (x + 2));
         var uobj = n.right_union;
         if (uobj.children.length > 0) {
           var child_nodes = [];
@@ -1929,14 +2148,15 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
                          child_nodes[0].sibling_line;
           var debug_label = 'Child lines from union of ' + y + ' ' + (x + 1) +
                             ' and ' + y + ' ' + (x + 2);
-          makechildlines(2.5 + 0.5 * (n.X + row[x+1].X),    // Xtop
-                         robj.Y + 0.5,                      // Ytop
-                         Xcenter,                           // Xcenter
-                         robj.Y + 1.5 + uobj.parent_line,   // Yparent
-                         Ysibling,                          // Ysibling
-                         this.rowobjs[y + 1].Y,             // Ychild
-                         child_nodes,                       // children
-                         debug_label);
+          this.makechildlines(
+              2.5 + 0.5 * (n.X + row[x+1].X),    // Xtop
+              robj.Y + 0.5,                      // Ytop
+              Xcenter,                           // Xcenter
+              robj.Y + 1.5 + uobj.parent_line,   // Yparent
+              Ysibling,                          // Ysibling
+              this.rowobjs[y + 1].Y,             // Ychild
+              child_nodes,                       // children
+              debug_label);
         }
       }
       if (n.children.length > 0) {
@@ -1949,14 +2169,15 @@ pedigree.Pedigree.prototype.plot = function(doc, container) {
                                    child_nodes[child_nodes.length - 1].X);
         var Ysibling = this.rowobjs[y + 1].Y - 1 - child_nodes[0].sibling_line;
         var debug_label = 'Child lines from ' + y + ' ' + (x + 1);
-        makechildlines(2.5 + n.X,                         // Xtop
-                       robj.Y + 1.0,                      // Ytop
-                       Xcenter,                           // Xcenter
-                       robj.Y + 1.5 + n.parent_line,      // Yparent
-                       Ysibling,                          // Ysibling
-                       this.rowobjs[y + 1].Y,             // Ychild
-                       child_nodes,                       // children
-                       debug_label);
+        this.makechildlines(
+            2.5 + n.X,                         // Xtop
+            robj.Y + 1.0,                      // Ytop
+            Xcenter,                           // Xcenter
+            robj.Y + 1.5 + n.parent_line,      // Yparent
+            Ysibling,                          // Ysibling
+            this.rowobjs[y + 1].Y,             // Ychild
+            child_nodes,                       // children
+            debug_label);
       }
     }
   }

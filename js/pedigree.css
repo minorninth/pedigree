@@ -7,18 +7,152 @@ html, body {
   position: absolute;
   top: 0px;
   left: 0px;
-  height: 100px;
+  height: 50px;
   right: 0px;
-  background: #ffe;
+  color: #ffe;
+  background: #099;
+}
+
+.header a {
+  color: #ffe;
+}
+
+.header > * {
+  font-family: arial,helvetica,sans-serif;
+  top: 0px;
+  height: 50px;
+  display: inline-block;
+}
+
+.header .app_title {
+  position: absolute;
+  left: 0px;
+  right: 250px;
+  font-size: 14pt;
+  font-weight: bold;
+  text-shadow: 2px 2px #066;
+}
+
+.header .app_title div {
+  height: 50px;
+  line-height: 50px;
+  padding-left: 20px;
+}
+
+.header .menu_container {
+  position: absolute;
+  left: 250px;
+  width: 300px;
+  top: 17px;
+  height: 32px;
+}
+
+.header .pedigree_title {
+  position: absolute;
+  left: 550px;
+  right: 200px;
+  font-size: 12pt;
+  overflow: hidden;
+}
+
+.header .pedigree_title table {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.header .pedigree_title td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  vertical-align: middle;
+  text-align: center;
+  line-height: 24px;
+  height: 50px;
+}
+
+.header .login_status {
+  position: absolute;
+  width: 200px;
+  right: 0px;
+  vertical-align: middle;
+  font-size: 12pt;
+  padding-right: 20px;
+}
+
+.header .login_status div {
+  width: 100%;
+  text-align: right;
+  height: 50px;
+  line-height: 50px;
+}
+
+.menu_title {
+  float: left;
+  height: 20px;
+  line-height: 20px;
+  display: inline-block;
+  padding: 6px 16px;
+  border-top: 1px solid #ffe;
+  border-left: 1px solid #ffe;
+  border-right: 1px solid #ffe;
+  margin-right: -1px;
+  background: #066;
+  border-radius: 4px 4px 0 0;
+  outline: none;
+}
+
+.menu_wrap {
+  float: left;
+  position: relative;
+  width: 1px;
+  top: 26px;
+}
+
+.menu {
+  width: 220px;
+  margin-left: -16px;
+  border-left: 1px solid #666;
+  border-right: 1px solid #666;
+  border-bottom: 1px solid #666;
+  border-radius: 0 0 5px 5px;
+  background: #ffffda;
+  background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#ffffda));
+  box-shadow: 0px 0px 10px #666;
+}
+
+.menu_item {
+  color: #666;
+  padding: 8px 15px;
+  outline: none;
+}
+
+.menu_item.focus {
+  background: #eeeeaa;
+  background: -webkit-gradient(linear, left top, left bottom, from(#ffffbb), to(#dddd99));
+}
+
+.menu_title:hover,
+.menu_title.focus {
+  color: #fff;
+  background: #6aa;
+}
+
+.menu_title.open {
+  color: #066;
+  background: #ffa;
 }
 
 .toolbar {
   position: absolute;
-  top: 100px;
+  top: 50px;
   left: 0px;
-  width: 250px;
-  bottom: 100px;
-  background: #eff;
+  width: 249px;
+  bottom: 30px;
+  border-right: 1px solid #000;
+  background: #dee;
 }
 
 .footer {
@@ -26,14 +160,31 @@ html, body {
   left: 0px;
   right: 0px;
   bottom: 0px;
-  height: 100px;
-  background: #fef;
+  height: 30px;
+  color: #ffe;
+  background: #099;
+  font-family: arial,helvetica,sans-serif;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 20px;
 }
 
 .toolbar button {
   width: 95px;
   height: 60px;
   margin-left: 20px;
+  border: 1px solid #999;
+  border-radius: 3px;
+  background: #ffd;
+  background: -webkit-gradient(linear, left top, left bottom, from(#fffff6), to(#f0f0c6));
+  outline: none;
+}
+
+.toolbar button.focus,
+.toolbar button:hover {
+  border: 1px solid #000;
+  background: #ee9;
+  background: -webkit-gradient(linear, left top, left bottom, from(#ffffe0), to(#dd8));
 }
 
 .toolbar .img {
@@ -66,6 +217,26 @@ html, body {
 
 .toolbar .img.pregloss {
   background-image: url('pregloss-20.png');
+}
+
+.toolbar .img.union {
+  background-image: url('male-20.png');
+  background-position: 4px -8px;
+}
+
+.toolbar .overlay.union {
+  background-image: url('female-20.png');
+  background-position: 34px -8px;
+}
+
+.toolbar .img.grab {
+  background-image: url('nogender-10.png');
+  background-position: center -6px;
+}
+
+.toolbar .overlay.grab {
+  background-image: url('nogender-10.png');
+  background-position: center 10px;
 }
 
 .toolbar .img.carrier {
@@ -112,11 +283,16 @@ html, body {
   background-image: url('nogender-20.png');
 }
 
+.toolbar .overlay.pregnancy {
+}
+
 .toolbar .overlay.pregnancy:after {
   content: "P";
   position: relative;
   top: 8px;
   left: 1px;
+  margin: 0px;
+  padding: 0px;
 }
 
 .toolbar .caption {
@@ -126,15 +302,21 @@ html, body {
 .pedigree_frame_wrapper {
   position: absolute;
   left: 250px;
-  top: 100px;
+  top: 50px;
   right: 0px;
-  bottom: 100px;
+  bottom: 30px;
+  z-index: -1;
 }
 
 .pedigree_frame {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
   width: 100%;
   height: 100%;
   border: none;
+  background: #fffff8;
+  z-index: 1;
 }
 
 .pedigree_frame::-webkit-scrollbar {
@@ -149,6 +331,14 @@ html, body {
   background-color: rgba(0, 0, 0, .3);
 }
 
+.pedigree #title {
+  position: absolute;
+  width: 1000px;
+  font-family: arial,helvetica,sans-serif;
+  font-size: 10pt;
+  text-align: center;
+}
+
 .pedigree .row * {
   position: absolute;
   outline: none;
@@ -159,51 +349,51 @@ html, body {
   height: 44px;
 }
 
-.pedigree .row .male.scale20 {
+.pedigree .row .scale20.male {
   background-image: url('male-20.png');
 }
 
-.pedigree .row .male.affected.scale20 {
+.pedigree .row .scale20.male.affected {
   background-image: url('male-aff-20.png');
 }
 
-.pedigree .row .female.scale20 {
+.pedigree .row .scale20.female {
   background-image: url('female-20.png');
 }
 
-.pedigree .row .female.affected.scale20 {
+.pedigree .row .scale20.female.affected {
   background-image: url('female-aff-20.png');
 }
 
-.pedigree .row .nogender.scale20 {
+.pedigree .row .scale20.nogender {
   background-image: url('nogender-20.png');
 }
 
-.pedigree .row .nogender.affected.scale20 {
+.pedigree .row .scale20.nogender.affected {
   background-image: url('nogender-aff-20.png');
 }
 
-.pedigree .row .pregloss.scale20 {
+.pedigree .row .scale20.pregloss {
   background-image: url('pregloss-20.png');
 }
 
-.pedigree .row .pregloss.affected.scale20 {
+.pedigree .row .scale20.pregloss.affected {
   background-image: url('pregloss-aff-20.png');
 }
 
-.pedigree .row .carrier.scale20 .carrier_dot {
+.pedigree .row .scale20.carrier .carrier_dot {
   width: 44px;
   height: 44px;
   background-image: url('carrier-dot-20.png');
 }
 
-.pedigree .row .proband.scale20 .proband_arrow {
+.pedigree .row .scale20.proband .proband_arrow {
   width: 44px;
   height: 44px;
   background-image: url('proband-arrow-20.png');
 }
 
-.pedigree .row .dead.scale20 .dead_slash {
+.pedigree .row .scale20.dead .dead_slash {
   width: 44px;
   height: 44px;
   background-image: url('dead-slash-20.png');
@@ -215,27 +405,27 @@ html, body {
   opacity: 0.2;
 }
 
-.pedigree .row .scale20.selected:focus .highlight {
+.pedigree .row .scale20.selected.focus .highlight {
   opacity: 0.6;
 }
 
-.pedigree .row .male.scale20.selected .highlight {
+.pedigree .row .scale20.male.selected .highlight {
   background-image: url('male-selected-20.png');
 }
 
-.pedigree .row .female.scale20.selected .highlight {
+.pedigree .row .scale20.female.selected .highlight {
   background-image: url('female-selected-20.png');
 }
 
-.pedigree .row .nogender.scale20.selected .highlight {
+.pedigree .row .scale20.nogender.selected .highlight {
   background-image: url('nogender-selected-20.png');
 }
 
-.pedigree .row .pregloss.scale20.selected .highlight {
+.pedigree .row .scale20.pregloss.selected .highlight {
   background-image: url('pregloss-selected-20.png');
 }
 
-.pedigree .row .rowmarker.scale20.selected {
+.pedigree .row .scale20.rowmarker.selected {
   background-image: url('rowmarker-selected-20.png');
 }
 
@@ -289,7 +479,7 @@ html, body {
   background-color: rgba(255, 255, 100, 0.2);
 }
 
-.pedigree .row .selected:focus .text_label {
+.pedigree .row .selected.focus .text_label {
   background-color: rgba(255, 255, 100, 0.5);
 }
 
@@ -299,7 +489,7 @@ html, body {
 }
 
 .pedigree .row * .coords {
-  color: #0cf;
+  color: #0dd;
   top: -4px;
   left: -8px;
   text-align: center;
@@ -346,8 +536,15 @@ html, body {
 }
 
 .dialog button {
-  padding: 0.5em 1em;
+  border: 1px solid #999;
+  border-radius: 5px;
+  padding: .5em 1em;
   margin-right: 1em;
   font-family: arial,helvetica,sans-serif;
-  font-size: 12pt;
+  font-size: 14pt;
+}
+
+.dialog button.focus {
+  border: 1px solid #000;
+  background-color: #ffb;
 }

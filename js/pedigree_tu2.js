@@ -4,7 +4,7 @@ tu2.data = {
   1: [
     new pedigree.Node({'gender': 'male',
                        'affected': false,
-                       'carrier': false,
+                       'carrier': true,
                        'dead': true,
                        'multiple': 1,
                        'pregnancy': false,

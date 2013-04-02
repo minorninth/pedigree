@@ -6,14 +6,24 @@
 <link rel="stylesheet" href="pedigree.css">
 </head>
 <body>
+<script src="compat.js"></script>
+<script src="json2.js"></script>
 <script src="pedigree.js"></script>
 <script src="dialogs.js"></script>
 <script src="ui.js"></script>
+<script src="jspdf/jspdf.js"></script>
+<script src="jspdf/jspdf.plugin.standard_fonts_metrics.js"></script>
+<script src="jspdf/jspdf.plugin.split_text_to_size.js"></script>
 <script src="pedigree_tu2.js"></script>
 
 <script>
-var ui = new pedigree.UI(tu2);
-ui.run();
+window.onload = function() {
+  var ui = new pedigree.UI(tu2);
+  //var ui = new pedigree.UI(new pedigree.Pedigree());
+  window.setTimeout(function() {
+    ui.run();
+  }, 0);
+}
 </script>
 
 </body>

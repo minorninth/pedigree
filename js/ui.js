@@ -10,15 +10,52 @@ pedigree.UI.prototype.posStr = function(opt_x, opt_y) {
     return this.pedigree.y + ' ' + (this.pedigree.x + 1);
 };
 
-pedigree.UI.prototype.replot = function() {
+pedigree.UI.prototype.recover = function() {
+  if (this.pedigree.undo_history.length - 1 > this.beforeCommandUndoIndex) {
+    console.log('WILL UNDO to recover');
+    this.pedigree.undo();
+  } else {
+    console.log('WILL LOAD TOP OF STACK to recover');
+    this.pedigree.loadstate(this.pedigree.undo_history[this.beforeCommandUndoIndex]);
+  }
+  this.pedigree.x = this.beforeCommandX;
+  this.pedigree.y = this.beforeCommandY;
   this.container.innerHTML = '';
-  this.pedigree.plot(this.innerDoc, this.container);
+  this.pedigree.plot();
+  this.pedigree.renderHtml(this.innerDoc, this.container);
   this.navigate(0, 0);
 };
 
-pedigree.UI.prototype.edit = function(x, y) {
+pedigree.UI.prototype.replot = function() {
+  console.log('replot inner doc: ' + this.innerDoc.body.outerHTML);
+
+  try {
+    this.container.innerHTML = '';
+    this.pedigree.plot();
+    this.pedigree.renderHtml(this.innerDoc, this.container);
+    this.navigate(0, 0);
+  } catch (e) {
+    console.log('Replot recover because ' + e.message);
+    this.recover();
+    if (e instanceof PedigreeException) {
+      pedigree.messageDialog(e.message);
+    } else {
+      throw e;
+    }
+  }
+
+  console.log('End of replot inner doc: ' + this.innerDoc.body.outerHTML);
+};
+
+pedigree.UI.prototype.edit = function() {
+  var x = this.pedigree.x;
+  var y = this.pedigree.y;
   var row = this.pedigree.data[y];
   var n = row[x];
+
+  if (x == -1)
+    return;
+
   pedigree.textareaDialog(
       'Enter a new description for ' + this.posStr(x, y),
       n.label,
@@ -42,6 +79,11 @@ pedigree.UI.prototype.editPageTitle = function() {
           this.replot();
         }
       }).bind(this));
+};
+
+pedigree.UI.prototype.save = function() {
+  this.pedigree.plot();
+  this.pedigree.renderPdf();
 };
 
 pedigree.UI.prototype.validateCoords = function(coords) {
@@ -242,6 +284,21 @@ pedigree.UI.prototype.parents = function() {
       }).bind(this));
 };
 
+pedigree.UI.prototype.insertRowAtTop = function() {
+  this.pedigree.insertNewRowAtTop();
+  this.navigate(0, 0 - this.pedigree.y);
+  this.replot();
+};
+
+pedigree.UI.prototype.insertRowAtBottom = function() {
+  var y = this.pedigree.y;
+  while (this.pedigree.data[y])
+    y++;
+  this.pedigree.data[y] = [];
+  this.replot();
+  this.navigate(0, y - this.pedigree.y);
+};
+
 pedigree.UI.prototype.promptInsertRowAtTop = function() {
   pedigree.yesNoDialog(
       'Insert new row at top?',
@@ -250,8 +307,7 @@ pedigree.UI.prototype.promptInsertRowAtTop = function() {
       null,
       (function() {
         // Yes.
-        this.pedigree.insertNewRowAtTop();
-        this.replot();
+        this.insertRowAtTop();
       }).bind(this),
       (function() {
         // No: do nothing.
@@ -355,220 +411,237 @@ pedigree.UI.prototype.init = function() {
   }
   this.pedigree.push('Initial state.');
 
-  this.pedigree.plot(this.innerDoc, this.container);
+  this.pedigree.plot();
+  this.pedigree.renderHtml(this.innerDoc, this.container);
 
   var element = this.getElement(this.pedigree.x, this.pedigree.y);
   element.tabIndex = 0;
-  element.classList.add('selected');
+  addClass(element, 'selected');
   element.focus();
+};
+
+pedigree.UI.prototype.undo = function() {
+  var undo_result = this.pedigree.undo();
+  if (undo_result) {
+    this.pedigree.x = undo_result.x;
+    this.pedigree.y = undo_result.y;
+    this.replot();
+  }
+};
+
+pedigree.UI.prototype.redo = function() {
+  var redo_result = this.pedigree.redo();
+  if (redo_result) {
+    this.pedigree.x = redo_result.x;
+    this.pedigree.y = redo_result.y;
+    this.replot();
+  }
+};
+
+pedigree.UI.prototype.moveLeft = function() {
+  this.navigate(-1, 0);
+};
+
+pedigree.UI.prototype.moveRight = function() {
+  this.navigate(1, 0);
+};
+
+pedigree.UI.prototype.moveUp = function() {
+  if (this.pedigree.y == 1) {
+    this.promptInsertRowAtTop();
+  } else {
+    var rowmax = 2;
+    for (var row in this.pedigree.data) {
+      if (row > rowmax)
+        rowmax = row;
+    }
+    if (this.pedigree.data[this.pedigree.y].length == 0 &&
+        this.pedigree.y == rowmax) {
+      delete this.pedigree.data[this.pedigree.y];
+      this.pedigree.y -= 1;
+      this.replot();
+    } else {
+      this.navigate(0, -1);
+    }
+  }
+};
+
+pedigree.UI.prototype.moveDown = function() {
+  if (this.pedigree.data[this.pedigree.y + 1] == undefined) {
+    this.pedigree.data[this.pedigree.y + 1] = [];
+    this.replot();
+  }
+  this.navigate(0, 1);
+};
+
+pedigree.UI.prototype.deleteCurrentNode = function() {
+  this.pedigree.deletenode(this.pedigree.x, this.pedigree.y);
+  this.replot();
+};
+
+pedigree.UI.prototype.union = function() {
+  this.pedigree.union(this.pedigree.x, this.pedigree.y);
+  this.replot();
+};
+
+pedigree.UI.prototype.grabChild = function() {
+  this.pedigree.grabchild(this.pedigree.x, this.pedigree.y);
+  this.replot();
+};
+
+pedigree.UI.prototype.nPeople = function() {
+  if (this.pedigree.x >= 0 && this.pedigree.x < this.pedigree.data[this.pedigree.y].length) {
+    var row = this.pedigree.data[this.pedigree.y];
+    row[this.pedigree.x].multiple = 10;
+    this.pedigree.push('setting ' + this.posStr() + ' to n people');
+    this.replot();
+  }
+};
+
+pedigree.UI.prototype.describeAll = function() {
+  pedigree.messageDialog(
+      this.pedigree.describe_all());
+};
+
+pedigree.UI.prototype.describe = function() {
+  pedigree.messageDialog(
+      this.pedigree.describe(this.pedigree.x, this.pedigree.y));
+};
+
+pedigree.UI.prototype.longDescribe = function() {
+  pedigree.messageDialog(
+      this.pedigree.longdescribe(this.pedigree.x, this.pedigree.y));
+};
+
+pedigree.UI.prototype.executeCommand = function(cmd) {
+  this.beforeCommandX = this.pedigree.x;
+  this.beforeCommandY = this.pedigree.y;
+  this.beforeCommandUndoIndex = this.pedigree.undo_history.length - 1;
+  try {
+    (cmd.bind(this))();
+  } catch (e) {
+    console.log('executeCommand recover because ' + e.message);
+    this.recover();
+    if (e instanceof PedigreeException) {
+      pedigree.messageDialog(e.message);
+    } else {
+      throw e;
+    }
+  }
 };
 
 pedigree.UI.prototype.run = function() {
   this.init();
 
-  this.container.addEventListener('click', (function(evt) {
+  var keydownMap = {
+     8: this.deleteCurrentNode,  // Backspace
+    13: this.edit,               // Enter
+    37: this.moveLeft,           // Left arrow
+    38: this.moveUp,             // Up arrow
+    39: this.moveRight,          // Right arrow
+    40: this.moveDown            // Down arrow
+  };
+
+  var keypressAsciiMap = {
+    'L': this.longDescribe,
+    'N': this.nPeople,
+    'P': this.togglePregnancy,
+    'T': this.toggleTwin,
+    'U': this.addNogender,
+    'a': this.toggleAffected,
+    'b': this.addPregloss,
+    'c': this.toggleCarrier,
+    'd': this.describe,
+    'f': this.addFemale,
+    'g': this.grabChild,
+    'k': this.toggleDead,
+    'm': this.addMale,
+    'p': this.parents,
+    'u': this.union,
+    'x': this.toggleProband
+  };
+
+  var globalKeypressAsciiMap = {
+    'j': this.jump,
+    'n': this.promptForNewPedigree,
+    's': this.save,
+    't': this.editPageTitle,
+    'w': this.describeAll,
+    'y': this.redo,
+    'z': this.undo,
+    'M': this.focusMenuBar,
+    '/': this.focusMenuBar
+  };
+
+  /*
+      case '?':
+        // Help
+        break;
+      case 'l'.charCodeAt(0):
+        // Load
+        break;
+      case 'q'.charCodeAt(0):
+        // Quit
+        break;
+      case 's'.charCodeAt(0):
+        // Save
+        break;
+  */
+
+  var keypressMap = {};
+  for (var asciiKey in keypressAsciiMap) {
+    keypressMap[asciiKey.charCodeAt(0)] = keypressAsciiMap[asciiKey];
+  };
+
+  var globalKeypressMap = {};
+  for (asciiKey in globalKeypressAsciiMap) {
+    globalKeypressMap[asciiKey.charCodeAt(0)] =
+        globalKeypressAsciiMap[asciiKey];
+  };
+
+  addEventListenerWrap(this.container, 'click', (function(evt) {
+    evt = evt || window.event;
     if (pedigree.dialogOpen) {
       pedigree.closeDialog();
       return;
     }
-    var t = evt.target;
-    while (t) {
-      if (t.hasAttribute('px') && t.hasAttribute('py')) {
+    var t = evt.target || evt.srcElement;
+    while (t && t.getAttribute) {
+      if (t.getAttributeNode('px') != null && t.getAttributeNode('py') != null) {
         var newx = Math.floor(t.getAttribute('px'));
         var newy = Math.floor(t.getAttribute('py'));
         this.navigate(newx - this.pedigree.x, newy - this.pedigree.y);
-        evt.stopPropagation();
-        evt.preventDefault();
+        cancelEventWrap(evt);
         break;
       }
-      t = t.parentElement;
+      t = t.parentNode;
     }
   }).bind(this), false);
-  this.container.addEventListener('keydown', (function(evt) {
+
+  addEventListenerWrap(this.container, 'keydown', (function(evt) {
+    evt = evt || window.event;
     console.log('KEYDOWN ' + evt.keyCode);
     if (pedigree.dialogOpen) {
       return;
     }
-    var handled = false;
-    switch(evt.keyCode) {
-      case 37:  // Left arrow
-        this.navigate(-1, 0);
-        handled = true;
-        break;
-      case 38:  // Up arrow
-        if (this.pedigree.y == 1) {
-          this.promptInsertRowAtTop();
-        } else {
-          var rowmax = 2;
-          for (var row in this.pedigree.data) {
-            if (row > rowmax)
-              rowmax = row;
-          }
-          if (this.pedigree.data[this.pedigree.y].length == 0 &&
-              this.pedigree.y == rowmax) {
-            delete this.pedigree.data[this.pedigree.y];
-            this.pedigree.y -= 1;
-            this.replot();
-          } else {
-            this.navigate(0, -1);
-          }
-        }
-        handled = true;
-        break;
-      case 39:  // Right arrow
-        this.navigate(1, 0);
-        handled = true;
-        break;
-      case 40:  // Down arrow
-        if (this.pedigree.data[this.pedigree.y + 1] == undefined) {
-          this.pedigree.data[this.pedigree.y + 1] = [];
-          this.replot();
-        }
-        this.navigate(0, 1);
-        handled = true;
-        break;
-      case 8:  // Backspace
-        this.pedigree.deletenode(this.pedigree.x, this.pedigree.y);
-        this.replot();
-        handled = true;
-        break;
-      case 13:  // Enter
-        this.edit(this.pedigree.x, this.pedigree.y);
-        handled = true;
-        break;
-    }
-    if (handled) {
-      evt.stopPropagation();
-      evt.preventDefault();
+    var cmd = keydownMap[evt.keyCode];
+    if (cmd != undefined) {
+      this.executeCommand(cmd);
+      cancelEventWrap(evt);
     }
   }).bind(this), false);
-  this.container.addEventListener('keypress', (function(evt) {
+
+  addEventListenerWrap(this.container, 'keypress', (function(evt) {
+    evt = evt || window.event;
     if (pedigree.dialogOpen) {
       return;
     }
     console.log('KEYPRESS ' + evt.charCode);
     var handled = false;
-    switch(evt.charCode) {
-      case 'f'.charCodeAt(0):
-        this.addFemale();
-        handled = true;
-        break;
-      case 'm'.charCodeAt(0):
-        this.addMale();
-        handled = true;
-        break;
-      case 'U'.charCodeAt(0):
-        this.addNogender();
-        handled = true;
-        break;
-      case 'b'.charCodeAt(0):
-        this.addPregloss();
-        handled = true;
-        break;
-      case 'u'.charCodeAt(0):
-        this.pedigree.union(this.pedigree.x, this.pedigree.y);
-        this.replot();
-        handled = true;
-        break;
-      case 'z'.charCodeAt(0):
-        var undo_result = this.pedigree.undo();
-        if (undo_result) {
-          this.pedigree.x = undo_result.x;
-          this.pedigree.y = undo_result.y;
-          this.replot();
-        }
-        handled = true;
-        break;
-      case 'y'.charCodeAt(0):
-        var redo_result = this.pedigree.redo();
-        if (redo_result) {
-          this.pedigree.x = redo_result.x;
-          this.pedigree.y = redo_result.y;
-          this.replot();
-        }
-        handled = true;
-        break;
-      case 'g'.charCodeAt(0):
-        this.pedigree.grabchild(this.pedigree.x, this.pedigree.y);
-        handled = true;
-        break;
-      case 'x'.charCodeAt(0):
-        this.toggleProband();
-        handled = true;
-        break;
-      case 'c'.charCodeAt(0):
-        this.toggleCarrier();
-        handled = true;
-        break;
-      case 'a'.charCodeAt(0):
-        this.toggleAffected();
-        handled = true;
-        break;
-      case 'T'.charCodeAt(0):
-        this.toggleTwin();
-        handled = true;
-        break;
-      case 'P'.charCodeAt(0):
-        this.togglePregnancy();
-        handled = true;
-        break;
-      case 'N'.charCodeAt(0):
-        if (this.pedigree.x >= 0 && this.pedigree.x < this.pedigree.data[this.pedigree.y].length) {
-          var row = this.pedigree.data[this.pedigree.y];
-          row[this.pedigree.x].multiple = 10;
-          this.pedigree.push('setting ' + this.posStr() + ' to n people');
-          this.replot();
-        }
-        handled = true;
-        break;
-      case 'k'.charCodeAt(0):
-        this.toggleDead();
-        handled = true;
-        break;
-      case 'L'.charCodeAt(0):
-        pedigree.messageDialog(
-            this.pedigree.longdescribe(this.pedigree.x, this.pedigree.y));
-        handled = true;
-        break;
-      case 'd'.charCodeAt(0):
-        pedigree.messageDialog(
-            this.pedigree.describe(this.pedigree.x, this.pedigree.y));
-        break;
-      case 'w'.charCodeAt(0):
-        pedigree.messageDialog(
-            this.pedigree.describe_all());
-        break;
-      case 't'.charCodeAt(0):
-        this.editPageTitle();
-        break;
-
-      case 'j'.charCodeAt(0):
-        this.jump();
-        break;
-
-      case 'n'.charCodeAt(0):
-        this.promptForNewPedigree();
-        break;
-
-      case 'p'.charCodeAt(0):
-        this.parents();
-        break;
-
-      case '?':
-        // Help
-        break;
-
-      case 'l'.charCodeAt(0):
-        // Load
-        break;
-
-      case 'q'.charCodeAt(0):
-        // Quit
-        break;
-
-      case 's'.charCodeAt(0):
-        // Save
-        break;
+    var cmd = keypressMap[evt.keyCode];
+    if (cmd != undefined) {
+      this.executeCommand(cmd);
+      handled = true;
     }
 
     if (evt.charCode == '.'.charCodeAt(0)) {
@@ -595,10 +668,39 @@ pedigree.UI.prototype.run = function() {
     }
 
     if (handled) {
-      evt.stopPropagation();
-      evt.preventDefault();
+      cancelEventWrap(evt);
     }
   }).bind(this), false);
+
+  function globalKeyPressHandler(evt) {
+    evt = evt || window.event;
+    if (pedigree.dialogOpen) {
+      return;
+    }
+    if (evt.altKey || evt.ctrlKey || evt.metaKey) {
+      return;
+    }
+    var cmd = globalKeypressMap[evt.keyCode];
+    if (cmd != undefined) {
+      this.executeCommand(cmd);
+      cancelEventWrap(evt);
+    }
+  }
+
+  addEventListenerWrap(document, 'keypress', globalKeyPressHandler.bind(this), false);
+  addEventListenerWrap(this.innerDoc, 'keypress', globalKeyPressHandler.bind(this), false);
+
+  var currentFocus = document.activeElement;
+  addClass(currentFocus, 'focus');
+
+  function globalFocusHandler(evt) {
+    removeClass(currentFocus, 'focus');
+    evt = evt || window.event;
+    currentFocus = evt.target || evt.srcElement;
+    addClass(currentFocus, 'focus');    
+  }
+
+  addEventListenerWrap(document, 'focusin', globalFocusHandler.bind(this), false);
 };
 
 pedigree.UI.prototype.getElement = function(x, y) {
@@ -613,7 +715,7 @@ pedigree.UI.prototype.navigate = function(dx, dy) {
   try {
     var element = this.getElement(this.pedigree.x, this.pedigree.y);
     element.tabIndex = -1;
-    element.classList.remove('selected');
+    removeClass(element, 'selected');
   } catch (ignore) {
   }
 
@@ -630,7 +732,7 @@ pedigree.UI.prototype.navigate = function(dx, dy) {
 
   var element = this.getElement(this.pedigree.x, this.pedigree.y);
   element.tabIndex = 0;
-  element.classList.add('selected');
+  addClass(element, 'selected');
   element.focus();
 };
 
@@ -652,11 +754,11 @@ pedigree.UI.prototype.addToolbarButton = function(name, imgClass, clickHandler) 
 
   var text = document.createElement('div');
   text.className = 'caption';
-  text.innerText = name;
+  text.innerHTML = name;
   button.appendChild(text);
 
   if (clickHandler) {
-    button.addEventListener('click', clickHandler.bind(this), false);
+    addEventListenerWrap(button, 'click', this.executeCommand.bind(this, clickHandler), false);
   }
 };
 
@@ -666,11 +768,198 @@ pedigree.UI.prototype.addToolbarSpacer = function() {
   this.toolbar.appendChild(divider);
 };
 
+pedigree.UI.prototype.addMenu = function(title) {
+  var menuTitle = document.createElement('div');
+  menuTitle.innerHTML = title;
+  menuTitle.className = 'menu_title';
+  menuTitle.setAttribute('role', 'menuitem');
+  menuTitle.tabIndex = 0;
+  this.menuContainer.appendChild(menuTitle);
+
+  var menuWrap = document.createElement('div');
+  menuWrap.className = 'menu_wrap';
+  menuWrap.style.visibility = 'hidden';
+  menuTitle.appendChild(menuWrap);
+
+  var menu = document.createElement('div');
+  menu.className = 'menu';
+  menu.setAttribute('role', 'menu');
+  menuWrap.appendChild(menu);
+
+  function openMenu() {
+    console.log('Opening menu ' + title);
+    menuTitle.className = 'menu_title open';
+    menuWrap.style.visibility = 'visible';
+    menuWrap.setAttribute('aria-hidden', 'false');
+    menu.firstChild.focus();
+  }
+
+  function hideMenu() {
+    menuWrap.style.visibility = 'hidden';
+    menuWrap.setAttribute('aria-hidden', 'true');
+    menuTitle.className = 'menu_title';
+  }
+
+  function closeMenu() {
+    hideMenu();
+    menuTitle.focus();    
+  }
+
+  function toggleMenu() {
+    if (menuWrap.style.visibility == 'hidden')
+      openMenu();
+    else
+      closeMenu();
+  }
+
+
+  addEventListenerWrap(menuTitle, 'keydown', (function(evt) {
+    evt = evt || window.event;
+    switch(evt.keyCode) {
+      case 13:  // Enter
+      case 32:  // Space
+        toggleMenu();
+        break;
+      case 40:  // Down arrow
+        openMenu();
+        break;
+      case 27:  // Escape
+        if (menuWrap.style.visibility == 'hidden')
+          this.navigate(0, 0);
+        else
+          closeMenu();
+        break;
+      case 37:  // Left arrow
+        if (menuTitle.previousSibling)
+          menuTitle.previousSibling.focus();
+        break;
+      case 39:  // Right arrow
+        if (menuTitle.nextSibling)
+          menuTitle.nextSibling.focus();
+        break;
+    }
+  }).bind(this), false);
+
+  addEventListenerWrap(menuTitle, 'click', function() {
+    toggleMenu();
+  }, false);
+
+  function onFocusChange() {
+    var e = document.activeElement;
+    while (e) {
+      if (e == menuTitle)
+        break;
+      e = e.parentElement;
+    }
+    if (e != menuTitle) {
+      hideMenu();
+    }
+  }
+  addEventListenerWrap(document, 'focus', function() {
+    window.setTimeout(function() {
+      onFocusChange();
+    }, 0);
+  }, true);
+  addEventListenerWrap(document, 'focusout', function() {
+    window.setTimeout(function() {
+      onFocusChange();
+    }, 0);
+  }, true);
+
+  return menu;
+};
+
+pedigree.UI.prototype.addMenuItem = function(menu, title, command) {
+  var menuWrap = menu.parentElement;
+  var menuTitle = menu.parentElement.parentElement;
+
+  var menuItem = document.createElement('div');
+  menuItem.innerHTML = title;
+  menuItem.className = 'menu_item';
+  menuItem.setAttribute('role', 'menuitem');
+  menuItem.tabIndex = 0;
+  menu.appendChild(menuItem);
+
+  addEventListenerWrap(menuItem, 'keydown', (function(evt) {
+    evt = evt || window.event;
+    switch(evt.keyCode) {
+      case 38:  // Up arrow
+        if (menuItem.previousSibling)
+          menuItem.previousSibling.focus();
+        break;
+      case 40:  // Down arrow
+        if (menuItem.nextSibling)
+          menuItem.nextSibling.focus();
+        break;
+      case 13:  // Enter
+      case 32:  // Space
+        this.executeCommand(command);
+        break;
+      default:
+        return false;
+    }
+    cancelEventWrap(evt);
+  }).bind(this), false);
+
+  addEventListenerWrap(menuItem, 'click', (function(evt) {
+    evt = evt || window.event;
+    this.executeCommand(command);
+    cancelEventWrap(evt);
+  }).bind(this), false);
+};
+
+pedigree.UI.prototype.focusMenuBar = function() {
+  this.fileMenu.parentElement.parentElement.focus();
+};
+
 pedigree.UI.prototype.buildInterface = function() {
   this.header = document.createElement('div');
   this.header.className = 'header';
-  this.header.innerText = 'Header';
   document.body.appendChild(this.header);
+
+  this.appTitle = document.createElement('div');
+  this.appTitle.className = 'app_title';
+  this.appTitle.innerHTML = '<div>Pedigree Editor</div>';
+  this.header.appendChild(this.appTitle);
+
+  this.menuContainer = document.createElement('div');
+  this.menuContainer.className = 'menu_container';
+  this.menuContainer.setAttribute('role', 'menubar');
+  this.header.appendChild(this.menuContainer);
+
+  this.pedigreeTitle = document.createElement('div');
+  this.pedigreeTitle.className = 'pedigree_title';
+  this.pedigreeTitle.innerHTML = '<table><tr><td>Pedigree Title.</td></tr></table>';
+  this.header.appendChild(this.pedigreeTitle);
+
+  this.loginStatus = document.createElement('div');
+  this.loginStatus.className = 'login_status';
+  this.loginStatus.innerHTML = '<div><a href="#">Not signed in.</a></div>';
+  this.header.appendChild(this.loginStatus);
+
+  this.fileMenu = this.addMenu('File');
+  this.editMenu = this.addMenu('Edit');
+  this.pedigreeMenu = this.addMenu('Pedigree');
+  this.viewMenu = this.addMenu('View');
+
+  this.addMenuItem(this.fileMenu, 'New Pedigree...', this.promptForNewPedigree);
+  this.addMenuItem(this.fileMenu, 'Set Title...', this.editPageTitle);
+  this.addMenuItem(this.fileMenu, 'Open...');
+  this.addMenuItem(this.fileMenu, 'Save', this.save);
+
+  this.addMenuItem(this.editMenu, 'Undo', this.undo);
+  this.addMenuItem(this.editMenu, 'Redo', this.redo);
+  this.addMenuItem(this.editMenu, 'Delete person', this.deleteCurrentNode);
+  this.addMenuItem(this.editMenu, 'Edit person\'s text', this.edit);
+  this.addMenuItem(this.editMenu, 'Describe person', this.describe);
+  this.addMenuItem(this.editMenu, 'Describe relation to proband', this.longDescribe);
+
+  this.addMenuItem(this.pedigreeMenu, 'Insert row above', this.insertRowAtTop);
+  this.addMenuItem(this.pedigreeMenu, 'Insert row below', this.insertRowAtBottom);
+  this.addMenuItem(this.pedigreeMenu, 'Jump', this.jump);
+  this.addMenuItem(this.pedigreeMenu, 'Describe entire pedgiree', this.describeAll);
+
+  this.addMenuItem(this.viewMenu, 'Zoom...');
 
   this.toolbar = document.createElement('div');
   this.toolbar.className = 'toolbar';
@@ -680,6 +969,11 @@ pedigree.UI.prototype.buildInterface = function() {
   this.addToolbarButton('Female', 'female', this.addFemale);
   this.addToolbarButton('No Gender', 'nogender', this.addNogender);
   this.addToolbarButton('Preg. Loss', 'pregloss', this.addPregloss);
+
+  this.addToolbarSpacer();
+
+  this.addToolbarButton('Union', 'union', this.union);
+  this.addToolbarButton('Grab Child', 'grab', this.grabChild);
 
   this.addToolbarSpacer();
 
@@ -699,30 +993,47 @@ pedigree.UI.prototype.buildInterface = function() {
   frame.className = 'pedigree_frame';
   frame_wrapper.appendChild(frame);
 
-  this.innerDoc = frame.contentWindow.document;
+  window.setTimeout((function() {
+    this.innerDoc = frame.contentWindow.document;
+    console.log('innerDoc: ' + this.innerDoc);
+    console.log('innerDoc.body: ' + this.innerDoc.body);
 
-  this.container = this.innerDoc.createElement('div');
-  this.container.id = 'pedigree';
-  this.container.className = 'pedigree';
-  this.container.setAttribute('role', 'grid');
-  this.container.setAttribute('aria-label', 'Pedigree');
+    this.container = this.innerDoc.createElement('div');
+    this.container.id = 'pedigree';
+    this.container.className = 'pedigree';
+    this.container.setAttribute('role', 'grid');
+    this.container.setAttribute('aria-label', 'Pedigree');
 
-  this.innerDoc.body.appendChild(this.container);
+    this.innerDoc.body.appendChild(this.container);
 
-  var style = this.innerDoc.createElement('link');
-  style.setAttribute('rel', 'stylesheet');
-  style.setAttribute('href', 'pedigree.css');
-  this.innerDoc.head.appendChild(style);
+    console.log('New inner doc: ' + this.innerDoc.body.outerHTML);
 
-  this.footer = document.createElement('div');
-  this.footer.className = 'footer';
-  this.footer.innerText = 'Footer';
-  document.body.appendChild(this.footer);
+    var style = this.innerDoc.createElement('link');
+    style.setAttribute('rel', 'stylesheet');
+    style.setAttribute('href', 'pedigree.css');
+    this.innerDoc.getElementsByTagName('head')[0].appendChild(style);
 
-  pedigree.restoreFocusFromDialog = (function() {
-    try {
-      this.getElement(this.pedigree.x, this.pedigree.y).focus();
-    } catch (x) {
-    }
-  }.bind(this));
+    var footer = document.createElement('div');
+    footer.className = 'footer';
+    footer.setAttribute('aria-live', 'polite');
+    document.body.appendChild(footer);
+    this.footer = footer;
+
+    window.out = function(msg) {
+      window.clearTimeout(window.lastFooterTimeoutId);
+      window.setTimeout(function() {
+        footer.innerHTML = msg;
+        window.lastFooterTimeoutId = window.setTimeout(function() {
+          footer.innerHTML = '';
+        }, 5000);
+      }, 100);
+    };
+
+    pedigree.restoreFocusFromDialog = (function() {
+      try {
+        this.getElement(this.pedigree.x, this.pedigree.y).focus();
+      } catch (x) {
+      }
+    }.bind(this));
+  }).bind(this), 0);
 };
