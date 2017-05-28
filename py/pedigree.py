@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/python2.7
 #
 # * Edit a label or top text in place
 # Move from one location to another
@@ -123,6 +123,7 @@ Press Enter to enter an additional description of a person.\r
 Press Shift-T on the first sibling to mark two siblings as twins.\r
 
 Press U to create or delete a union.\r
+Press Shift-C to create a consanguinous union.\r
 Press P to set or delete a person's parents.\r
 Press G to grab the next parentless person in the next row as a child.\r
 Press dot P to use the same parents as the previous person.\r
@@ -236,7 +237,7 @@ def quotestr(str):
 class node:
   def __init__(self, gender, affected=False, carrier=False, dead=False,
                      multiple = 1, pregnancy=False, twin=False,
-                     proband=False, parents=None, label=""):
+                     proband=False, parents=None, label="", consanguinous=False):
     self.gender = gender
     self.affected = affected
     self.carrier = carrier
@@ -247,6 +248,7 @@ class node:
     self.proband = proband
     self.parents = parents
     self.label = label
+    self.consanguinous = consanguinous
 
   def __repr__(self):
     label = self.label
@@ -257,6 +259,7 @@ class node:
            '     dead='+str(self.dead)+',\n'+ \
            '     multiple='+str(self.multiple)+',\n'+ \
            '     pregnancy='+str(self.pregnancy)+',\n'+ \
+           '     consanguinous='+str(self.consanguinous)+',\n'+ \
            '     twin='+str(self.twin)+',\n'+ \
            '     proband='+str(self.proband)+',\n'+ \
            '     parents='+str(self.parents)+',\n'+ \
@@ -271,7 +274,8 @@ class state:
       self.data[i] = []
       for n in data[i]:
         n2 = node(n.gender, n.affected, n.carrier, n.dead, n.multiple,
-                  n.pregnancy, n.twin, n.proband, n.parents, n.label)
+                  n.pregnancy, n.twin, n.proband, n.parents, n.label,
+                  n.consanguinous)
         self.data[i].append(n2)
     self.unions = {}
     for i in unions:
@@ -290,7 +294,7 @@ class state:
 
 class pedigree:
   def __init__(self):
-    self.text = 'Created by Ronit Ovadia'
+    self.text = 'Created by Ronit Mazzoni'
     self.data = {}
     self.data[1] = []
     self.unions = {}
@@ -583,7 +587,7 @@ class pedigree:
         out("The output is three pages, in three separate PDF files.")
       else:
         out("The output is two pages, in two separate PDF files.")
-    
+
     #self.plot(filename, braille=True)
     self.filename = filename
     out("Data file and PDF saved.")
@@ -753,12 +757,16 @@ class pedigree:
             ustr = ", in union with %d %d" % (y2, x2+1)
           else:
             ustr += " and %d %d" % (y2, x2+1)
+          if n.consanguinous:
+            ustr += " consanguinous"
         if x2==x and y2==y and (x1, y1) not in found_unions:
           found_unions.append((x1, y1))
           if ustr=="":
             ustr = ", in union with %d %d" % (y1, x1+1)
           else:
             ustr += " and %d %d" % (y1, x1+1)
+          if n.consanguinous:
+            ustr += " consanguinous"
       str += ustr
 
       # parents
@@ -956,7 +964,6 @@ class pedigree:
       out("%d %d is not related to the proband." % (ay, ax + 1))
       if self.data[ay][ax].parents != None:
          parents = self.data[ay][ax].parents
-         print parents
       return
     pathlen = self.pathlen(relations)
     # Do some simplifying: for each position in the path, if both
@@ -1254,7 +1261,7 @@ class pedigree:
     self.push("adding parents of %d %d" % (y, x+1), x, y)
     self.describe(x, y)
 
-  def union(self, x, y):
+  def union(self, x, y, consanguinous=False):
     if x==-1:
       return
     row = self.data[y]
@@ -1285,7 +1292,7 @@ class pedigree:
         oldunions = self.unions
         self.unions = {}
         for (xx1, yy1, xx2, yy2) in oldunions:
-          if ((xx1==x and yy1==y and xx2==x2 and yy2==y2) or 
+          if ((xx1==x and yy1==y and xx2==x2 and yy2==y2) or
               (xx2==x and yy2==y and xx1==x2 and yy1==y2)):
             pass
           else:
@@ -1300,6 +1307,9 @@ class pedigree:
     if y!=y2:
       if not self.ask("Are you sure you want to union between different rows?"):
         return
+
+    self.data[y][x].consanguinous = consanguinous
+
     self.unions[(x, y, x2, y2)] = 1
     self.push("creating union between %d %d and %d %d" % (y, x+1, y2, x2+1), x, y)
     self.describe(x, y)
@@ -1394,6 +1404,7 @@ class pedigree:
           (y1, x1+1, y2, x2+1))
         out("Cannot save drawing.")
         return False
+      consanguinous = self.data[y1][x1].consanguinous
       if x1 > x2:
         (x2, x1) = (x1, x2)
       if x2 != x1 + 1:
@@ -1402,6 +1413,7 @@ class pedigree:
         out("Cannot save drawing.")
         return False
       uobj = unionobj()
+      uobj.consanguinous = consanguinous
       unions[(y1, x1, x2)] = uobj
       uobj.children = []
       uobj.parent_line = None
@@ -1413,11 +1425,14 @@ class pedigree:
     # Step 4: Append children to each Parent or Union
     for y in rows:
       row = self.data[y]
+      myx = 0
       for n in row:
+        myx += 1
         if n.parents != None:
           (x1, y1, x2, y2) = n.parents
           if x1 == None or (x1 != None and x2 != None and x1 > x2):
             (x2, x1) = (x1, x2)
+            #(y2, y1) = (y1, y2) # ------------------------------------------
           did_union = False
           if x1 != None and x2 != None:
             if (y1, x1, x2) in unions:
@@ -1879,7 +1894,7 @@ class pedigree:
       line = "Page %d" % (page + 1)
       text(Xmax/2.0, - text_height, line, fontsize=10.0,
            horizontalalignment='center',
-           verticalalignment='top')      
+           verticalalignment='top')
 
     def draw_braille(str, X, Y, center):
       bx = 2.0
@@ -1901,14 +1916,16 @@ class pedigree:
           if (j+1) in pattern:
             (dotx, doty) = dots[j]
             obj = Circle((Xleft + i*bx + dotx, Y + doty), radius = 0.08,
-                         resolution = 30, linewidth = linewidth)
+                         linewidth = linewidth)
+            #resolution = 30,
             obj.set_facecolor('#000000')
             gca().add_patch(obj)
 
     def makeperson(n, X, Y):
       if n.gender == 'female':
-        obj = Circle((X + 2.5, Y + 0.5), radius = 0.5, resolution=100,
+        obj = Circle((X + 2.5, Y + 0.5), radius = 0.5,
                      linewidth=linewidth)
+        #resolution=100,
       elif n.gender == 'male':
         obj = Rectangle(xy=(X + 2.0, Y + 0.0),
                         width = 1.0, height = 1.0,
@@ -1934,7 +1951,8 @@ class pedigree:
         # Draw the object
         gca().add_patch(obj)
       if n.carrier:
-        center_dot = Circle((X + 2.5, Y + 0.5), radius = 0.1, resolution=50)
+        center_dot = Circle((X + 2.5, Y + 0.5), radius = 0.1)
+        # resolution=50)
         center_dot.set_facecolor('#000000')
         gca().add_patch(center_dot)
       if n.proband:
@@ -2027,10 +2045,14 @@ class pedigree:
         n = row[x]
         makeperson(n, n.X, robj.Y)
         if n.right_union != None:
+          uobj = n.right_union
           plot([n.X + 3.0, row[x+1].X + 2.0],
                [robj.Y + 0.5, robj.Y + 0.5],
                color='#000000', linewidth=linewidth)
-          uobj = n.right_union
+          if uobj.consanguinous:
+            plot([n.X + 3.0, row[x+1].X + 2.0],
+                 [robj.Y + 0.3, robj.Y + 0.3],
+                 color='#000000', linewidth=linewidth)
           if len(uobj.children) > 0:
             child_nodes = [self.data[y+1][c] for c in uobj.children]
             Xcenter = 2.5 + 0.5 * (child_nodes[0].X + child_nodes[-1].X)
@@ -2134,7 +2156,9 @@ class pedigree:
           if x >= 0 and x < len(row):
             self.edit(x, y)
         elif c=='u':
-          self.union(x, y)
+          self.union(x, y, False)
+        elif c=='C':
+          self.union(x, y, True)
         elif c=='p':
           self.parents(x, y)
         elif c=='g':
@@ -2143,7 +2167,7 @@ class pedigree:
           if x >= 0 and x < len(row):
             row[x].pregnancy = not row[x].pregnancy
             self.push("changing pregnancy status of %d %d" % (y, x+1), x, y)
-            self.describe(x, y)           
+            self.describe(x, y)
         elif c=='T':
           if x >= 0 and x < len(row):
             row[x].twin = not row[x].twin
