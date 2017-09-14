@@ -45,10 +45,10 @@ except:
 
 if windows:
   import readline
+  readline_obj = readline.Readline()
   def readline_wrapper(initial_line):
-    readline_obj = readline.Readline()
-    readline_obj._bind_key("control-left", readline_obj.backward_word)
-    readline_obj._bind_key("control-right", readline_obj.forward_word)
+    if not initial_line:
+      initial_line = ""
     def readline_init():
       readline_obj.insert_text(initial_line)
     readline_obj.set_pre_input_hook(readline_init)
@@ -72,7 +72,7 @@ else:
     return str
 
 import matplotlib
-if windows:
+if False and windows:
   matplotlib.use('PS')
 else:
   matplotlib.use('Pdf')
@@ -144,7 +144,7 @@ class QuitError(Exception):
 def out(str):
   if g_connection:
     g_connection.send(str + "\r\n")
-    print str
+    print(str)
   else:
     try:
       sys.stdout.write(str)
@@ -168,9 +168,9 @@ def inchar():
   if g_connection:
     data = g_connection.recv(1)
     if (ord(data) >= ord('0') and ord(data) <= ord('z')):
-      print "# %c" % data
+      print("# %c" % data)
     else:
-      print "#", ord(data)
+      print("#", ord(data))
     if not data:
       return 3
     else:
@@ -217,10 +217,10 @@ def smart_eps2pdf(infilename, outfilename):
   tmpf.flush()
 
   if windows:
-    gs = 'c:/Progra~1/gs/gs8.54/bin/gswin32c.exe'
+    gs = 'c:/Progra~2/gs/gs8.54/bin/gswin32c.exe'
   else:
     gs = '/sw/bin/gs'
-  cmdline = '%s -dDEVICEWIDTHPOINTS=%d -dDEVICEHEIGHTPOINTS=%d -dFIXEDMEDIA -q -dBATCH -dSAFER -dMaxBitmap=500000000 -dNOPAUSE -dAlignToPixels=0 -sDEVICE="pdfwrite" -sOutputFile="%s" -f"%s"' % (gs, bbox[2]-bbox[0], bbox[3]-bbox[1], outfilename, tmpfilename)
+  cmdline = '%s -dDEVICEWIDTHPOINTS%d -dDEVICEHEIGHTPOINTS=%d -dFIXEDMEDIA -q -dBATCH -dSAFER -dMaxBitmap=500000000 -dNOPAUSE -dAlignToPixels=0 -sDEVICE="pdfwrite" -sOutputFile="%s" -f"%s"' % (gs, bbox[2]-bbox[0], bbox[3]-bbox[1], outfilename, tmpfilename)
   if VERBOSE:
     out(cmdline)
   os.system(cmdline)
@@ -304,12 +304,12 @@ class pedigree:
     self.dirty = False
     self.prev_parents = None
     self.last_dot = False
-    self.filename = False
+    self.filename = None
     pass
 
   def get_next_char(self):
     c = inchar()
-    self.char_history += c
+    self.char_history += str(c)
     if ord(self.char_history[-2])==224: # win32 escape code
       if ord(c)==75:
         return LEFT
@@ -1500,7 +1500,7 @@ class pedigree:
           spacing += 1.0
           nchild = True
         if len(row[x].label) > LARGE_LABEL_CHARS:
-	  spacing += EXTRA_LARGE_HORIZONTAL_SPACE
+          spacing += EXTRA_LARGE_HORIZONTAL_SPACE
         elif row[x].proband or len(row[x].label) > MED_LABEL_CHARS:
           spacing += EXTRA_MED_HORIZONTAL_SPACE
         if x == 0 or nchild:
@@ -1770,7 +1770,7 @@ class pedigree:
         if line+1 > robj.num_parent_lines:
           robj.num_parent_lines = line+1
       if robj.num_parent_lines < num_label_conflicts:
-	robj.num_parent_lines = num_label_conflicts
+        robj.num_parent_lines = num_label_conflicts
       verbose("  Sibling lines: " + str(sibling_lines))
       verbose("  Parent lines: " + str(parent_lines))
 
@@ -2088,7 +2088,7 @@ class pedigree:
       filename = '%s.braille.pdf' % filename_stem
     else:
       filename = '%s.pdf' % filename_stem
-    if windows:
+    if False and windows:
       savefig('tmp.eps')
       smart_eps2pdf('tmp.eps', filename)
     else:
@@ -2303,7 +2303,7 @@ class pedigree:
             try:
               out("Unknown character %d." % ord(c))
             except:
-              print "Unknown character", c
+              print("Unknown character", c)
               pass
           pass
         if c=='.':
@@ -2313,7 +2313,7 @@ class pedigree:
       except QuitError:
         raise QuitError
       except:
-	out("Sorry, an error occurred with that last command.")
+        out("Sorry, an error occurred with that last command.")
         if DBG:
           fp = open("debug_pedigree_out.txt", "w")
           traceback.print_exc(file=fp)
@@ -2359,24 +2359,24 @@ if __name__=="__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('', port))
     while 1:
-      print "Listening on port %d" % port
+      print("Listening on port %d" % port)
       s.listen(1)
       conn, addr = s.accept()
       conn.send('\xFF\xFB\x03') # WILL go into character mode
       conn.send('\xFF\xFB\x01') # WILL echo
 
       g_connection = conn
-      print "Connected by", addr
+      print("Connected by", addr)
       try:
         p = pedigree()
         p.run()
       except QuitError:
-        print "Exited natually."
+        print("Exited natually.")
       except:
         traceback.print_exc(file=sys.stdout)
-        print "Exited unnaturally."
+        print("Exited unnaturally.")
       conn.close()
-      print "Connection closed."
+      print("Connection closed.")
       print
   else:
     if windows:
