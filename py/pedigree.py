@@ -1942,6 +1942,7 @@ class pedigree:
                           (X + 2.0, Y + 0.5)],
                       linewidth=linewidth)
       obj.set_facecolor('#ffffff')
+      obj.set_edgecolor('#000000')
       if n.affected:
         obj.set_facecolor('#c0c0c0')
       if n.multiple == 0:
