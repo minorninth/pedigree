@@ -106,7 +106,7 @@ COV[47] = 1;   this.y = y0;
 COV[48] = 1; };
 
 pedigree.Pedigree = function() {
-COV[49] = 1;   this.text = 'Created by Ronit Mazzoni';
+COV[49] = 1;   this.text = 'Pedigree Title';
 COV[50] = 1;   this.data = {};
 COV[51] = 1;   this.data[1] = [];
 COV[52] = 1;   this.unions = [];

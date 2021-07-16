@@ -117,7 +117,7 @@ pedigree.State = function(action, data, unions, x0, y0, text) {
 };
 
 pedigree.Pedigree = function() {
-  this.text = 'Created by Ronit Mazzoni';
+  this.text = 'Pedigree Title';
   this.data = {};
   this.data[1] = [];
   this.unions = [];

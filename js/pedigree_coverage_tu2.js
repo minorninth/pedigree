@@ -4,7 +4,7 @@ tu2.data = {
   1: [
     new pedigree.Node({'gender': 'male',
                        'affected': false,
-                       'carrier': false,
+                       'carrier': true,
                        'dead': true,
                        'multiple': 1,
                        'pregnancy': false,
@@ -196,7 +196,7 @@ tu2.data = {
                        'twin': false,
                        'proband': false,
                        'parents': [6, 1, 7, 1],
-                       'label': 'd. 20\'s in Vietnam war'})],
+                       'label': 'd. 20\'s in war'})],
   3: [
     new pedigree.Node({'gender': 'male',
                        'affected': false,
@@ -310,7 +310,7 @@ tu2.data = {
                        'twin': false,
                        'proband': true,
                        'parents': [4, 3, 5, 3],
-                       'label': '***REMOVED*** ***REMOVED***, bilateral cleft lip' +
+                       'label': 'Proband, bilateral cleft lip' +
                                 ' and palate.'})
   ]
 };
@@ -324,7 +324,7 @@ tu2.unions = [
   [2, 1, 3, 1],
   [5, 1, 4, 1]];
 
-tu2.text = '***REMOVED***Patient Name: ***REMOVED*** Tucker ***REMOVED***; Ethnicity Maternal: Norwegian Paternal: Norwegian; Consanguinity denied';
+tu2.text = 'Ethnicity - Maternal: Swedish, Paternal: Danish; Consanguinity denied';
 
 tu2.describe_all();
 
