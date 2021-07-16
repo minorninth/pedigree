@@ -1,5 +1,6 @@
+/**
 Python -> JavaScript notes:
-//
+
 Prefer Python:
 * negative array indexing, like:
     first = a[0]
@@ -26,8 +27,8 @@ Equivalent:
 
 Tossup:
 * Structured indentation vs braces and semicolons.
-//
 
+**/
 
 var nodeData1 = {
   'gender': 'male',
