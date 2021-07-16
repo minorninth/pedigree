@@ -204,83 +204,83 @@ html, body {
 }
 
 .toolbar .img.male {
-  background-image: url('male-20.png');
+  background-image: url('images/male-20.png');
 }
 
 .toolbar .img.female {
-  background-image: url('female-20.png');
+  background-image: url('images/female-20.png');
 }
 
 .toolbar .img.nogender {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
 }
 
 .toolbar .img.pregloss {
-  background-image: url('pregloss-20.png');
+  background-image: url('images/pregloss-20.png');
 }
 
 .toolbar .img.union {
-  background-image: url('male-20.png');
+  background-image: url('images/male-20.png');
   background-position: 4px -8px;
 }
 
 .toolbar .overlay.union {
-  background-image: url('female-20.png');
+  background-image: url('images/female-20.png');
   background-position: 34px -8px;
 }
 
 .toolbar .img.grab {
-  background-image: url('nogender-10.png');
+  background-image: url('images/nogender-10.png');
   background-position: center -6px;
 }
 
 .toolbar .overlay.grab {
-  background-image: url('nogender-10.png');
+  background-image: url('images/nogender-10.png');
   background-position: center 10px;
 }
 
 .toolbar .img.carrier {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
 }
 
 .toolbar .overlay.carrier {
-  background-image: url('carrier-dot-20.png');
+  background-image: url('images/carrier-dot-20.png');
 }
 
 .toolbar .img.affected {
-  background-image: url('nogender-aff-20.png');
+  background-image: url('images/nogender-aff-20.png');
 }
 
 .toolbar .img.dead {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
 }
 
 .toolbar .overlay.dead {
-  background-image: url('dead-slash-20.png');
+  background-image: url('images/dead-slash-20.png');
 }
 
 .toolbar .img.proband {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
 }
 
 .toolbar .overlay.proband {
-  background-image: url('proband-arrow-20.png');
+  background-image: url('images/proband-arrow-20.png');
   background-position: center -11px;
 }
 
 .toolbar .img.twin {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
   background-position: 4px -8px;
 }
 
 .toolbar .overlay.twin {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
   background-position: 34px -8px;
   opacity: 0.5;
 }
 
 .toolbar .img.pregnancy {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
 }
 
 .toolbar .overlay.pregnancy {
@@ -350,53 +350,53 @@ html, body {
 }
 
 .pedigree .row .scale20.male {
-  background-image: url('male-20.png');
+  background-image: url('images/male-20.png');
 }
 
 .pedigree .row .scale20.male.affected {
-  background-image: url('male-aff-20.png');
+  background-image: url('images/male-aff-20.png');
 }
 
 .pedigree .row .scale20.female {
-  background-image: url('female-20.png');
+  background-image: url('images/female-20.png');
 }
 
 .pedigree .row .scale20.female.affected {
-  background-image: url('female-aff-20.png');
+  background-image: url('images/female-aff-20.png');
 }
 
 .pedigree .row .scale20.nogender {
-  background-image: url('nogender-20.png');
+  background-image: url('images/nogender-20.png');
 }
 
 .pedigree .row .scale20.nogender.affected {
-  background-image: url('nogender-aff-20.png');
+  background-image: url('images/nogender-aff-20.png');
 }
 
 .pedigree .row .scale20.pregloss {
-  background-image: url('pregloss-20.png');
+  background-image: url('images/pregloss-20.png');
 }
 
 .pedigree .row .scale20.pregloss.affected {
-  background-image: url('pregloss-aff-20.png');
+  background-image: url('images/pregloss-aff-20.png');
 }
 
 .pedigree .row .scale20.carrier .carrier_dot {
   width: 44px;
   height: 44px;
-  background-image: url('carrier-dot-20.png');
+  background-image: url('images/carrier-dot-20.png');
 }
 
 .pedigree .row .scale20.proband .proband_arrow {
   width: 44px;
   height: 44px;
-  background-image: url('proband-arrow-20.png');
+  background-image: url('images/proband-arrow-20.png');
 }
 
 .pedigree .row .scale20.dead .dead_slash {
   width: 44px;
   height: 44px;
-  background-image: url('dead-slash-20.png');
+  background-image: url('images/dead-slash-20.png');
 }
 
 .pedigree .row .scale20.selected .highlight {
@@ -410,23 +410,23 @@ html, body {
 }
 
 .pedigree .row .scale20.male.selected .highlight {
-  background-image: url('male-selected-20.png');
+  background-image: url('images/male-selected-20.png');
 }
 
 .pedigree .row .scale20.female.selected .highlight {
-  background-image: url('female-selected-20.png');
+  background-image: url('images/female-selected-20.png');
 }
 
 .pedigree .row .scale20.nogender.selected .highlight {
-  background-image: url('nogender-selected-20.png');
+  background-image: url('images/nogender-selected-20.png');
 }
 
 .pedigree .row .scale20.pregloss.selected .highlight {
-  background-image: url('pregloss-selected-20.png');
+  background-image: url('images/pregloss-selected-20.png');
 }
 
 .pedigree .row .scale20.rowmarker.selected {
-  background-image: url('rowmarker-selected-20.png');
+  background-image: url('images/rowmarker-selected-20.png');
 }
 
 .pedigree .row .rowmarker {
