@@ -20,20 +20,24 @@ Vue.component('pedigree-ui', {
       </div>
     </div>
     <div class="toolbar">
-      <pedigree-button buttontype="male" caption="Male" v-on:click="male()"/>
-      <pedigree-button buttontype="female" caption="Female" v-on:click="female()"/>
-      <pedigree-button buttontype="nogender" caption="No Gender" v-on:click="nogender()"/>
-      <pedigree-button buttontype="pregloss" caption="Preg. Loss" v-on:click="pregloss()"/>
-      <div style="height: 20px;"/>
-      <pedigree-button buttontype="union" caption="Union" v-on:click="union()"/>
-      <pedigree-button buttontype="grab" caption="Grab Child" v-on:click="grab()"/>
-      <div style="height: 20px;"/>
-      <pedigree-button buttontype="carrier" caption="Carrier" v-on:click="carrier()"/>
-      <pedigree-button buttontype="affected" caption="Affected" v-on:click="affected()"/>
-      <pedigree-button buttontype="dead" caption="Dead" v-on:click="dead()"/>
-      <pedigree-button buttontype="proband" caption="Proband" v-on:click="proband()"/>
-      <pedigree-button buttontype="twin" caption="Twin" v-on:click="twin()"/>
-      <pedigree-button buttontype="pregnancy" caption="Pregnancy" v-on:click="pregnancy()"/>
+      <div style="height: 172px;">
+        <pedigree-button buttontype="male" caption="Male" v-on:click="male()"/>
+        <pedigree-button buttontype="female" caption="Female" v-on:click="female()"/>
+        <pedigree-button buttontype="nogender" caption="No Gender" v-on:click="nogender()"/>
+        <pedigree-button buttontype="pregloss" caption="Preg. Loss" v-on:click="pregloss()"/>
+      </div>
+      <div style="height: 96px;">
+        <pedigree-button buttontype="union" caption="Union" v-on:click="union()"/>
+        <pedigree-button buttontype="grab" caption="Grab Child" v-on:click="grab()"/>
+      </div>
+      <div>
+        <pedigree-button buttontype="carrier" caption="Carrier" v-on:click="carrier()"/>
+        <pedigree-button buttontype="affected" caption="Affected" v-on:click="affected()"/>
+        <pedigree-button buttontype="dead" caption="Dead" v-on:click="dead()"/>
+        <pedigree-button buttontype="proband" caption="Proband" v-on:click="proband()"/>
+        <pedigree-button buttontype="twin" caption="Twin" v-on:click="twin()"/>
+        <pedigree-button buttontype="pregnancy" caption="Pregnancy" v-on:click="pregnancy()"/>
+      </div>
     </div>
     <div id="pedigree_frame_wrapper"></div>
     <div id="footer" aria-live="polite"></div>
