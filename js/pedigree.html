@@ -6,6 +6,16 @@
 <link rel="stylesheet" href="pedigree.css">
 </head>
 <body>
+
+  <div id="app">
+    <pedigree-ui></pedigree-ui>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+<script src="pedigree_ui.js"></script>
+<script src="pedigree_button.js"></script>
+
 <script src="compat.js"></script>
 <script src="json2.js"></script>
 <script src="pedigree.js"></script>
@@ -17,13 +27,9 @@
 <script src="pedigree_tu2.js"></script>
 
 <script>
-window.onload = function() {
-  var ui = new pedigree.UI(tu2);
-  //var ui = new pedigree.UI(new pedigree.Pedigree());
-  window.setTimeout(function() {
-    ui.run();
-  }, 0);
-}
+  window.onload = () => {
+    let app = new Vue({el: '#app'});
+  };
 </script>
 
 </body>

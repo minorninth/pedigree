@@ -3,6 +3,14 @@ html, body {
   padding: 0;
 }
 
+#app {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
+}
+
 .header {
   position: absolute;
   top: 0px;
@@ -39,7 +47,7 @@ html, body {
   padding-left: 20px;
 }
 
-.header .menu_container {
+.header #menu_container {
   position: absolute;
   left: 250px;
   width: 300px;
@@ -155,7 +163,7 @@ html, body {
   background: #dee;
 }
 
-.footer {
+#footer {
   position: absolute;
   left: 0px;
   right: 0px;
@@ -299,7 +307,7 @@ html, body {
   margin-top: -8px;
 }
 
-.pedigree_frame_wrapper {
+#pedigree_frame_wrapper {
   position: absolute;
   left: 250px;
   top: 50px;

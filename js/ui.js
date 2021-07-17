@@ -913,29 +913,8 @@ pedigree.UI.prototype.focusMenuBar = function() {
 };
 
 pedigree.UI.prototype.buildInterface = function() {
-  this.header = document.createElement('div');
-  this.header.className = 'header';
-  document.body.appendChild(this.header);
-
-  this.appTitle = document.createElement('div');
-  this.appTitle.className = 'app_title';
-  this.appTitle.innerHTML = '<div>Pedigree Editor</div>';
-  this.header.appendChild(this.appTitle);
-
-  this.menuContainer = document.createElement('div');
-  this.menuContainer.className = 'menu_container';
+  this.menuContainer = document.getElementById('menu_container');
   this.menuContainer.setAttribute('role', 'menubar');
-  this.header.appendChild(this.menuContainer);
-
-  this.pedigreeTitle = document.createElement('div');
-  this.pedigreeTitle.className = 'pedigree_title';
-  this.pedigreeTitle.innerHTML = '<table><tr><td>Pedigree Title.</td></tr></table>';
-  this.header.appendChild(this.pedigreeTitle);
-
-  this.loginStatus = document.createElement('div');
-  this.loginStatus.className = 'login_status';
-  this.loginStatus.innerHTML = '<div><a href="#">Not signed in.</a></div>';
-  this.header.appendChild(this.loginStatus);
 
   this.fileMenu = this.addMenu('File');
   this.editMenu = this.addMenu('Edit');
@@ -961,32 +940,7 @@ pedigree.UI.prototype.buildInterface = function() {
 
   this.addMenuItem(this.viewMenu, 'Zoom...');
 
-  this.toolbar = document.createElement('div');
-  this.toolbar.className = 'toolbar';
-  document.body.appendChild(this.toolbar);
-
-  this.addToolbarButton('Male', 'male', this.addMale);
-  this.addToolbarButton('Female', 'female', this.addFemale);
-  this.addToolbarButton('No Gender', 'nogender', this.addNogender);
-  this.addToolbarButton('Preg. Loss', 'pregloss', this.addPregloss);
-
-  this.addToolbarSpacer();
-
-  this.addToolbarButton('Union', 'union', this.union);
-  this.addToolbarButton('Grab Child', 'grab', this.grabChild);
-
-  this.addToolbarSpacer();
-
-  this.addToolbarButton('Carrier', 'carrier', this.toggleCarrier);
-  this.addToolbarButton('Affected', 'affected', this.toggleAffected);
-  this.addToolbarButton('Dead', 'dead', this.toggleDead);
-  this.addToolbarButton('Proband', 'proband', this.toggleProband);
-  this.addToolbarButton('Twin', 'twin', this.toggleTwin);
-  this.addToolbarButton('Pregnancy', 'pregnancy', this.togglePregnancy);
-
-  var frame_wrapper = document.createElement('div');
-  frame_wrapper.className = 'pedigree_frame_wrapper';
-  document.body.appendChild(frame_wrapper);
+  var frame_wrapper = document.getElementById('pedigree_frame_wrapper');
 
   var frame = document.createElement('iframe');
   frame.name = 'Pedigree';
@@ -1013,11 +967,7 @@ pedigree.UI.prototype.buildInterface = function() {
     style.setAttribute('href', 'pedigree.css');
     this.innerDoc.getElementsByTagName('head')[0].appendChild(style);
 
-    var footer = document.createElement('div');
-    footer.className = 'footer';
-    footer.setAttribute('aria-live', 'polite');
-    document.body.appendChild(footer);
-    this.footer = footer;
+    this.footer = document.getElementById('footer');
 
     window.out = function(msg) {
       window.clearTimeout(window.lastFooterTimeoutId);
