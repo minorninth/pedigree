@@ -470,7 +470,7 @@ Vue.component('pedigree-ui', {
     
       var element = this.getElement(this.pedigree.x, this.pedigree.y);
       element.tabIndex = 0;
-      addClass(element, 'selected');
+      element.classList.add('selected');
       element.focus();
     },
     undo: function() {
@@ -638,7 +638,7 @@ Vue.component('pedigree-ui', {
             globalKeypressAsciiMap[asciiKey];
       };
     
-      addEventListenerWrap(this.container, 'click', (function(evt) {
+      this.container.addEventListener('click', (function(evt) {
         evt = evt || window.event;
         if (pedigree.dialogOpen) {
           pedigree.closeDialog();
@@ -650,14 +650,15 @@ Vue.component('pedigree-ui', {
             var newx = Math.floor(t.getAttribute('px'));
             var newy = Math.floor(t.getAttribute('py'));
             this.navigate(newx - this.pedigree.x, newy - this.pedigree.y);
-            cancelEventWrap(evt);
+	    evt.stopPropagation();
+	    evt.preventDefault();   
             break;
           }
           t = t.parentNode;
         }
       }).bind(this), false);
     
-      addEventListenerWrap(this.container, 'keydown', (function(evt) {
+      this.container.addEventListener('keydown', (function(evt) {
         evt = evt || window.event;
         console.log('KEYDOWN ' + evt.keyCode);
         if (pedigree.dialogOpen) {
@@ -666,11 +667,12 @@ Vue.component('pedigree-ui', {
         var cmd = keydownMap[evt.keyCode];
         if (cmd != undefined) {
           this.executeCommand(cmd);
-          cancelEventWrap(evt);
+          evt.stopPropagation();
+	  evt.preventDefault();   
         }
       }).bind(this), false);
     
-      addEventListenerWrap(this.container, 'keypress', (function(evt) {
+      this.container.addEventListener('keypress', (function(evt) {
         evt = evt || window.event;
         if (pedigree.dialogOpen) {
           return;
@@ -707,7 +709,8 @@ Vue.component('pedigree-ui', {
         }
     
         if (handled) {
-          cancelEventWrap(evt);
+          evt.stopPropagation();
+	  evt.preventDefault();   
         }
       }).bind(this), false);
     
@@ -722,24 +725,25 @@ Vue.component('pedigree-ui', {
         var cmd = globalKeypressMap[evt.keyCode];
         if (cmd != undefined) {
           this.executeCommand(cmd);
-          cancelEventWrap(evt);
+          evt.stopPropagation();
+	  evt.preventDefault();   
         }
       }
     
-      addEventListenerWrap(document, 'keypress', globalKeyPressHandler.bind(this), false);
-      addEventListenerWrap(this.innerDoc, 'keypress', globalKeyPressHandler.bind(this), false);
+      document.addEventListener('keypress', globalKeyPressHandler.bind(this), false);
+      this.innerDoc.addEventListener('keypress', globalKeyPressHandler.bind(this), false);
     
       var currentFocus = document.activeElement;
-      addClass(currentFocus, 'focus');
+      currentFocus.classList.add('focus');
     
       function globalFocusHandler(evt) {
-        removeClass(currentFocus, 'focus');
+        currentFocus.classList.remove('focus');
         evt = evt || window.event;
         currentFocus = evt.target || evt.srcElement;
-        addClass(currentFocus, 'focus');    
+        currentFocus.classList.add('focus');
       }
     
-      addEventListenerWrap(document, 'focusin', globalFocusHandler.bind(this), false);
+      document.addEventListener('focusin', globalFocusHandler.bind(this), false);
     },    
     getElement: function(x, y) {
       if (x >= 0) {
@@ -752,7 +756,7 @@ Vue.component('pedigree-ui', {
       try {
         var element = this.getElement(this.pedigree.x, this.pedigree.y);
         element.tabIndex = -1;
-        removeClass(element, 'selected');
+        element.classList.remove('selected');
       } catch (ignore) {
       }
     
@@ -769,7 +773,7 @@ Vue.component('pedigree-ui', {
     
       var element = this.getElement(this.pedigree.x, this.pedigree.y);
       element.tabIndex = 0;
-      addClass(element, 'selected');
+      element.classList.add('selected');
       element.focus();
     },
     addToolbarButton: function(name, imgClass, clickHandler) {
@@ -794,7 +798,7 @@ Vue.component('pedigree-ui', {
       button.appendChild(text);
     
       if (clickHandler) {
-        addEventListenerWrap(button, 'click', this.executeCommand.bind(this, clickHandler), false);
+        button.addEventListener('click', this.executeCommand.bind(this, clickHandler), false);
       }
     },
     addToolbarSpacer: function() {
@@ -847,7 +851,7 @@ Vue.component('pedigree-ui', {
       }
     
     
-      addEventListenerWrap(menuTitle, 'keydown', (function(evt) {
+      menuTitle.addEventListener('keydown', (function(evt) {
         evt = evt || window.event;
         switch(evt.keyCode) {
           case 13:  // Enter
@@ -874,7 +878,7 @@ Vue.component('pedigree-ui', {
         }
       }).bind(this), false);
     
-      addEventListenerWrap(menuTitle, 'click', function() {
+      menuTitle.addEventListener('click', function() {
         toggleMenu();
       }, false);
     
@@ -889,12 +893,12 @@ Vue.component('pedigree-ui', {
           hideMenu();
         }
       }
-      addEventListenerWrap(document, 'focus', function() {
+      document.addEventListener('focus', function() {
         window.setTimeout(function() {
           onFocusChange();
         }, 0);
       }, true);
-      addEventListenerWrap(document, 'focusout', function() {
+      document.addEventListener('focusout', function() {
         window.setTimeout(function() {
           onFocusChange();
         }, 0);
@@ -913,7 +917,7 @@ Vue.component('pedigree-ui', {
       menuItem.tabIndex = 0;
       menu.appendChild(menuItem);
     
-      addEventListenerWrap(menuItem, 'keydown', (function(evt) {
+      menuItem.addEventListener('keydown', (function(evt) {
         evt = evt || window.event;
         switch(evt.keyCode) {
           case 38:  // Up arrow
@@ -931,13 +935,14 @@ Vue.component('pedigree-ui', {
           default:
             return false;
         }
-        cancelEventWrap(evt);
+        evt.stopPropagation();
+        evt.preventDefault();   
       }).bind(this), false);
     
-      addEventListenerWrap(menuItem, 'click', (function(evt) {
-        evt = evt || window.event;
+      menuItem.addEventListener('click', (function(evt) {
         this.executeCommand(command);
-        cancelEventWrap(evt);
+        evt.stopPropagation();
+        evt.preventDefault();   
       }).bind(this), false);
     },
     focusMenuBar: function() {
