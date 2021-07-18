@@ -140,25 +140,25 @@ Vue.component('pedigree-ui', {
       pedigree.textareaDialog(
           'Enter a new description for ' + this.posStr(x, y),
           n.label,
-          (function(result) {
+          (result) => {
             if (result != null) {
               n.label = result;
               this.pedigree.push('changing description of ' + this.posStr(x, y));
               this.replot();
             }
-          }).bind(this));
+          });
     },
     editPageTitle: function() {
       pedigree.textareaDialog(
           'Enter the text to go at the top of the page.',
           this.pedigree.text,
-          (function(result) {
+          (result) => {
             if (result != null) {
               this.pedigree.text = result;
               this.pedigree.push('changing text at top of page');
               this.replot();
             }
-          }).bind(this));
+          });
     },
     save: function() {
       this.pedigree.plot();
@@ -172,12 +172,12 @@ Vue.component('pedigree-ui', {
     jump: function() {
       pedigree.coordinatesDialog(
           'Enter the coordinates to jump to, of the form "3 2", separated by a comma or space.',
-          this.validateCoords.bind(this),
-          (function(result) {
+          () => this.validateCoords(),
+          (result) => {
             var x = result[0];
             var y = result[1];
             this.navigate(x - this.pedigree.x, y - this.pedigree.y);
-          }).bind(this));      
+          });      
     },
     createNewPedigree: function() {
       this.pedigree = new pedigree.Pedigree();
@@ -193,13 +193,13 @@ Vue.component('pedigree-ui', {
           'Start New Pedigree',
           'Cancel',
           null,
-          (function() {
+          () => {
             // Yes.
             this.createNewPedigree();
-          }).bind(this),
-          (function() {
+          },
+          () => {
             // No: do nothing.
-          }).bind(this),
+          },
           null);
     },
     setParents: function(numParents, fx, fy, mx, my) {
@@ -213,18 +213,18 @@ Vue.component('pedigree-ui', {
     handleOneParent: function() {
       pedigree.coordinatesDialog(
           'Specify the parent of ' + this.posStr(),
-          this.validateCoords.bind(this),
-          (function(result) {
+          () => this.validateCoords(),
+          (result) => {
             var x = result[0];
             var y = result[1];
             this.setParents(1, x, y, null, null);
-          }).bind(this));
+          });
     },
     handleSecondOfTwoParents: function(fx, fy) {
       pedigree.coordinatesDialog(
           'Now please specify the mother of ' + this.posStr() + '.',
-          this.validateCoords.bind(this),
-          (function(result) {
+          () => this.validateCoords(),
+          (result) => {
             var mx = result[0];
             var my = result[1];
             var m = this.pedigree.data[my][mx];
@@ -234,7 +234,7 @@ Vue.component('pedigree-ui', {
             }
     
             this.setParents(2, fx, fy, mx, my);
-          }).bind(this));
+          });
     },
     gotFirstOfTwoParents: function(fx, fy) {
       for (var i = 0; i < this.pedigree.unions.length; i++) {
@@ -248,17 +248,17 @@ Vue.component('pedigree-ui', {
               'Yes',
               'No',
               'Cancel',
-          (function() {
+          () => {
             // Yes.
             this.setParents(2, ux1, uy1, ux2, uy2);
-          }).bind(this),
-          (function() {
+          },
+          () => {
             // No.
             this.handleSecondOfTwoParents(fx, fy);
-          }).bind(this),
-          (function() {
+          },
+          () => {
             // Cancel.
-          }).bind(this));
+          });
           return;
         } else if (ux2 == fx && uy2 == fy) {
           pedigree.yesNoDialog(
@@ -266,17 +266,17 @@ Vue.component('pedigree-ui', {
               'Yes',
               'No',
               'Cancel',
-          (function() {
+          () => {
             // Yes.
             this.setParents(2, ux1, uy1, ux2, uy2);
-          }).bind(this),
-          (function() {
+          },
+          () => {
             // No.
             this.handleSecondOfTwoParents(fx, fy);
-          }).bind(this),
-          (function() {
+          },
+          () => {
             // Cancel.
-          }).bind(this));
+          });
           return;
         }
       }
@@ -286,8 +286,8 @@ Vue.component('pedigree-ui', {
     handleFirstOfTwoParents: function() {
       pedigree.coordinatesDialog(
           'Please specify the father of ' + this.posStr() + ' first.',
-          this.validateCoords.bind(this),
-          (function(result) {
+          () => this.validateCoords(),
+          (result) => {
             var fx = result[0];
             var fy = result[1];
             var f = this.pedigree.data[fy][fx];
@@ -297,7 +297,7 @@ Vue.component('pedigree-ui', {
             }
     
             this.gotFirstOfTwoParents(fx, fy);
-          }).bind(this));      
+          });      
     },
     deleteParents: function() {
       var x = this.pedigree.x;
@@ -341,15 +341,15 @@ Vue.component('pedigree-ui', {
           '1 parent',
           '2 parents',
           clearPrompt,
-          (function() {
+          () => {
             this.handleOneParent();
-          }).bind(this),
-          (function() {
+          },
+          () => {
             this.handleFirstOfTwoParents();
-          }).bind(this),
-          (function() {
+          },
+          () => {
             this.deleteParents();
-          }).bind(this));
+          });
     },
     insertRowAtTop: function() {
       this.pedigree.insertNewRowAtTop();
@@ -370,13 +370,13 @@ Vue.component('pedigree-ui', {
           'Yes',
           'No',
           null,
-          (function() {
+          () => {
             // Yes.
             this.insertRowAtTop();
-          }).bind(this),
-          (function() {
+          },
+          () => {
             // No: do nothing.
-          }).bind(this),
+          },
           null);
     },
     addFemale: function() {
@@ -623,7 +623,7 @@ Vue.component('pedigree-ui', {
             globalKeypressAsciiMap[asciiKey];
       };
     
-      this.container.addEventListener('click', (function(evt) {
+      this.container.addEventListener('click', (evt) => {
         evt = evt || window.event;
         if (pedigree.dialogOpen) {
           pedigree.closeDialog();
@@ -641,9 +641,9 @@ Vue.component('pedigree-ui', {
           }
           t = t.parentNode;
         }
-      }).bind(this), false);
+      }, false);
     
-      this.container.addEventListener('keydown', (function(evt) {
+      this.container.addEventListener('keydown', (evt) => {
         evt = evt || window.event;
         console.log('KEYDOWN ' + evt.keyCode);
         if (pedigree.dialogOpen) {
@@ -655,9 +655,9 @@ Vue.component('pedigree-ui', {
           evt.stopPropagation();
 	  evt.preventDefault();   
         }
-      }).bind(this), false);
+      }, false);
     
-      this.container.addEventListener('keypress', (function(evt) {
+      this.container.addEventListener('keypress', (evt) => {
         evt = evt || window.event;
         if (pedigree.dialogOpen) {
           return;
@@ -697,7 +697,7 @@ Vue.component('pedigree-ui', {
           evt.stopPropagation();
 	  evt.preventDefault();   
         }
-      }).bind(this), false);
+      }, false);
     
       function globalKeyPressHandler(evt) {
         evt = evt || window.event;
@@ -836,7 +836,7 @@ Vue.component('pedigree-ui', {
       }
     
     
-      menuTitle.addEventListener('keydown', (function(evt) {
+      menuTitle.addEventListener('keydown', (evt) => {
         evt = evt || window.event;
         switch(evt.keyCode) {
           case 13:  // Enter
@@ -861,7 +861,7 @@ Vue.component('pedigree-ui', {
               menuTitle.nextSibling.focus();
             break;
         }
-      }).bind(this), false);
+      }, false);
     
       menuTitle.addEventListener('click', function() {
         toggleMenu();
@@ -902,7 +902,7 @@ Vue.component('pedigree-ui', {
       menuItem.tabIndex = 0;
       menu.appendChild(menuItem);
     
-      menuItem.addEventListener('keydown', (function(evt) {
+      menuItem.addEventListener('keydown', (evt) => {
         evt = evt || window.event;
         switch(evt.keyCode) {
           case 38:  // Up arrow
@@ -922,13 +922,13 @@ Vue.component('pedigree-ui', {
         }
         evt.stopPropagation();
         evt.preventDefault();   
-      }).bind(this), false);
+      }, false);
     
-      menuItem.addEventListener('click', (function(evt) {
+      menuItem.addEventListener('click', (evt) => {
         this.executeCommand(command);
         evt.stopPropagation();
         evt.preventDefault();   
-      }).bind(this), false);
+      }, false);
     },
     focusMenuBar: function() {
       this.fileMenu.parentElement.parentElement.focus();
@@ -968,7 +968,7 @@ Vue.component('pedigree-ui', {
       frame.className = 'pedigree_frame';
       frame_wrapper.appendChild(frame);
     
-      window.setTimeout((function() {
+      window.setTimeout(() => {
         this.innerDoc = frame.contentWindow.document;
         console.log('innerDoc: ' + this.innerDoc);
         console.log('innerDoc.body: ' + this.innerDoc.body);
@@ -998,14 +998,15 @@ Vue.component('pedigree-ui', {
               footer.innerHTML = '';
             }, 5000);
           }, 100);
-        },
-        pedigree.restoreFocusFromDialog = (function() {
+        };
+
+        pedigree.restoreFocusFromDialog = () => {
           try {
             this.getElement(this.pedigree.x, this.pedigree.y).focus();
           } catch (x) {
           }
-        }.bind(this));
-      }).bind(this), 0);
+        };
+      }, 0);
     }
   }
 });
