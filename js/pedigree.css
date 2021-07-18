@@ -1,14 +1,15 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 }
 
 #app {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    bottom: 0px;
-    right: 0px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
 }
 
 .header {
@@ -26,7 +27,7 @@ html, body {
 }
 
 .header > * {
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   top: 0px;
   height: 50px;
   display: inline-block;
@@ -110,6 +111,8 @@ html, body {
   background: #066;
   border-radius: 4px 4px 0 0;
   outline: none;
+  cursor: pointer;
+  user-select: none;
 }
 
 .menu_wrap {
@@ -127,7 +130,7 @@ html, body {
   border-bottom: 1px solid #666;
   border-radius: 0 0 5px 5px;
   background: #ffffda;
-  background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#ffffda));
+  background: linear-gradient(to bottom, #ffffff, #ffffda);
   box-shadow: 0px 0px 10px #666;
 }
 
@@ -135,11 +138,14 @@ html, body {
   color: #666;
   padding: 8px 15px;
   outline: none;
+  cursor: pointer;
+  user-select: none;
 }
 
-.menu_item.focus {
+.menu_item.focus,
+.menu_item:hover {
   background: #eeeeaa;
-  background: -webkit-gradient(linear, left top, left bottom, from(#ffffbb), to(#dddd99));
+  background: linear-gradient(to bottom, #ffffbb, #dddd99);
 }
 
 .menu_title:hover,
@@ -171,13 +177,14 @@ html, body {
   height: 30px;
   color: #ffe;
   background: #099;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   height: 30px;
   line-height: 30px;
   padding-left: 20px;
 }
 
 .toolbar button {
+  cursor: pointer;
   display: block;
   float: left;
   width: 95px;
@@ -186,7 +193,7 @@ html, body {
   border: 1px solid #999;
   border-radius: 3px;
   background: #ffd;
-  background: -webkit-gradient(linear, left top, left bottom, from(#fffff6), to(#f0f0c6));
+  background: linear-gradient(to bottom, #fffff6, #f0f0c6);
   outline: none;
 }
 
@@ -194,7 +201,7 @@ html, body {
 .toolbar button:hover {
   border: 1px solid #000;
   background: #ee9;
-  background: -webkit-gradient(linear, left top, left bottom, from(#ffffe0), to(#dd8));
+  background: linear-gradient(to bottom, #ffffe0, #dd8);
 }
 
 .toolbar .img {
@@ -214,83 +221,83 @@ html, body {
 }
 
 .toolbar .img.male {
-  background-image: url('images/male-20.png');
+  background-image: url("images/male-20.png");
 }
 
 .toolbar .img.female {
-  background-image: url('images/female-20.png');
+  background-image: url("images/female-20.png");
 }
 
 .toolbar .img.nogender {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
 }
 
 .toolbar .img.pregloss {
-  background-image: url('images/pregloss-20.png');
+  background-image: url("images/pregloss-20.png");
 }
 
 .toolbar .img.union {
-  background-image: url('images/male-20.png');
+  background-image: url("images/male-20.png");
   background-position: 4px -8px;
 }
 
 .toolbar .overlay.union {
-  background-image: url('images/female-20.png');
+  background-image: url("images/female-20.png");
   background-position: 34px -8px;
 }
 
 .toolbar .img.grab {
-  background-image: url('images/nogender-10.png');
+  background-image: url("images/nogender-10.png");
   background-position: center -6px;
 }
 
 .toolbar .overlay.grab {
-  background-image: url('images/nogender-10.png');
+  background-image: url("images/nogender-10.png");
   background-position: center 10px;
 }
 
 .toolbar .img.carrier {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.carrier {
-  background-image: url('images/carrier-dot-20.png');
+  background-image: url("images/carrier-dot-20.png");
 }
 
 .toolbar .img.affected {
-  background-image: url('images/nogender-aff-20.png');
+  background-image: url("images/nogender-aff-20.png");
 }
 
 .toolbar .img.dead {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.dead {
-  background-image: url('images/dead-slash-20.png');
+  background-image: url("images/dead-slash-20.png");
 }
 
 .toolbar .img.proband {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.proband {
-  background-image: url('images/proband-arrow-20.png');
+  background-image: url("images/proband-arrow-20.png");
   background-position: center -11px;
 }
 
 .toolbar .img.twin {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
   background-position: 4px -8px;
 }
 
 .toolbar .overlay.twin {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
   background-position: 34px -8px;
   opacity: 0.5;
 }
 
 .toolbar .img.pregnancy {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.pregnancy {
@@ -338,13 +345,13 @@ html, body {
 .pedigree_frame::-webkit-scrollbar-thumb {
   border-radius: 8px;
   border: 2px solid white; /* should match background, can't be transparent */
-  background-color: rgba(0, 0, 0, .3);
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .pedigree #title {
   position: absolute;
   width: 1000px;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 10pt;
   text-align: center;
 }
@@ -360,53 +367,53 @@ html, body {
 }
 
 .pedigree .row .scale20.male {
-  background-image: url('images/male-20.png');
+  background-image: url("images/male-20.png");
 }
 
 .pedigree .row .scale20.male.affected {
-  background-image: url('images/male-aff-20.png');
+  background-image: url("images/male-aff-20.png");
 }
 
 .pedigree .row .scale20.female {
-  background-image: url('images/female-20.png');
+  background-image: url("images/female-20.png");
 }
 
 .pedigree .row .scale20.female.affected {
-  background-image: url('images/female-aff-20.png');
+  background-image: url("images/female-aff-20.png");
 }
 
 .pedigree .row .scale20.nogender {
-  background-image: url('images/nogender-20.png');
+  background-image: url("images/nogender-20.png");
 }
 
 .pedigree .row .scale20.nogender.affected {
-  background-image: url('images/nogender-aff-20.png');
+  background-image: url("images/nogender-aff-20.png");
 }
 
 .pedigree .row .scale20.pregloss {
-  background-image: url('images/pregloss-20.png');
+  background-image: url("images/pregloss-20.png");
 }
 
 .pedigree .row .scale20.pregloss.affected {
-  background-image: url('images/pregloss-aff-20.png');
+  background-image: url("images/pregloss-aff-20.png");
 }
 
 .pedigree .row .scale20.carrier .carrier_dot {
   width: 44px;
   height: 44px;
-  background-image: url('images/carrier-dot-20.png');
+  background-image: url("images/carrier-dot-20.png");
 }
 
 .pedigree .row .scale20.proband .proband_arrow {
   width: 44px;
   height: 44px;
-  background-image: url('images/proband-arrow-20.png');
+  background-image: url("images/proband-arrow-20.png");
 }
 
 .pedigree .row .scale20.dead .dead_slash {
   width: 44px;
   height: 44px;
-  background-image: url('images/dead-slash-20.png');
+  background-image: url("images/dead-slash-20.png");
 }
 
 .pedigree .row .scale20.selected .highlight {
@@ -420,23 +427,23 @@ html, body {
 }
 
 .pedigree .row .scale20.male.selected .highlight {
-  background-image: url('images/male-selected-20.png');
+  background-image: url("images/male-selected-20.png");
 }
 
 .pedigree .row .scale20.female.selected .highlight {
-  background-image: url('images/female-selected-20.png');
+  background-image: url("images/female-selected-20.png");
 }
 
 .pedigree .row .scale20.nogender.selected .highlight {
-  background-image: url('images/nogender-selected-20.png');
+  background-image: url("images/nogender-selected-20.png");
 }
 
 .pedigree .row .scale20.pregloss.selected .highlight {
-  background-image: url('images/pregloss-selected-20.png');
+  background-image: url("images/pregloss-selected-20.png");
 }
 
 .pedigree .row .scale20.rowmarker.selected {
-  background-image: url('images/rowmarker-selected-20.png');
+  background-image: url("images/rowmarker-selected-20.png");
 }
 
 .pedigree .row .rowmarker {
@@ -444,7 +451,7 @@ html, body {
   width: 44px;
   height: 44px;
   line-height: 44px;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 14pt;
   font-weight: bold;
 }
@@ -471,7 +478,7 @@ html, body {
   position: relative;
   text-align: center;
   line-height: 44px;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 10pt;
 }
 
@@ -480,7 +487,7 @@ html, body {
   top: 44px;
   left: -40px;
   width: 124px;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 10pt;
   cursor: pointer;
 }
@@ -503,7 +510,7 @@ html, body {
   top: -4px;
   left: -8px;
   text-align: center;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 10pt;
   cursor: pointer;
 }
@@ -525,19 +532,21 @@ html, body {
 }
 
 .dialog label div {
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 14pt;
   font-weight: bold;
 }
 
 .dialog h2 {
   margin: 0;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 14pt;
   font-weight: bold;
 }
 
-.dialog textarea,button,input {
+.dialog textarea,
+button,
+input {
   margin-top: 1em;
 }
 
@@ -548,9 +557,9 @@ html, body {
 .dialog button {
   border: 1px solid #999;
   border-radius: 5px;
-  padding: .5em 1em;
+  padding: 0.5em 1em;
   margin-right: 1em;
-  font-family: arial,helvetica,sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 14pt;
 }
 
