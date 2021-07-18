@@ -611,22 +611,7 @@ Vue.component('pedigree-ui', {
         'M': this.focusMenuBar,
         '/': this.focusMenuBar
       };
-    
-      /*
-          case '?':
-            // Help
-            break;
-          case 'l'.charCodeAt(0):
-            // Load
-            break;
-          case 'q'.charCodeAt(0):
-            // Quit
-            break;
-          case 's'.charCodeAt(0):
-            // Save
-            break;
-      */
-    
+        
       var keypressMap = {};
       for (var asciiKey in keypressAsciiMap) {
         keypressMap[asciiKey.charCodeAt(0)] = keypressAsciiMap[asciiKey];
