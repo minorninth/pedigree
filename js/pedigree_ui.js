@@ -6,18 +6,6 @@ Vue.component('pedigree-ui', {
           <div>Pedigree Editor</div>
         </div>
         <div id="menu_container" role="menubar"/>
-        <div class="pedigree_title">
-          <table>
-            <tbody>
-              <tr>
-                <td>Pedigree Title.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="login_status">
-          <div><a href="#">Not signed in.</a></div>
-        </div>
       </div>
       <div class="toolbar">
         <div style="height: 172px;">
