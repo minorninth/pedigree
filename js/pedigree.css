@@ -120,6 +120,7 @@ body {
   position: relative;
   width: 1px;
   top: 26px;
+  z-index: 1;
 }
 
 .menu {
@@ -332,7 +333,6 @@ body {
   height: 100%;
   border: none;
   background: #fffff8;
-  z-index: 1;
 }
 
 .pedigree_frame::-webkit-scrollbar {
@@ -528,7 +528,6 @@ body {
   border: 1px solid #000;
   border-radius: 2px;
   box-shadow: 0px 0px 10px #666;
-  z-index: 2;
 }
 
 .dialog label div {
