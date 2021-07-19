@@ -664,15 +664,17 @@ Vue.component("pedigree-ui", {
           globalKeypressAsciiMap[asciiKey];
       }
 
+      console.log('Adding event listener to ' + this.container);
       this.container.addEventListener(
-        "click",
+        "mousedown",
         (evt) => {
-          evt = evt || window.event;
+          console.log('Click ' + evt);
           if (pedigree.dialogOpen) {
             pedigree.closeDialog();
             return;
           }
-          var t = evt.target || evt.srcElement;
+          var t = evt.target;
+          console.log('Click on ' + t);
           while (t && t.getAttribute) {
             if (
               t.getAttributeNode("px") != null &&
@@ -688,13 +690,12 @@ Vue.component("pedigree-ui", {
             t = t.parentNode;
           }
         },
-        false
+        true
       );
 
       this.container.addEventListener(
         "keydown",
         (evt) => {
-          evt = evt || window.event;
           console.log("KEYDOWN " + evt.keyCode);
           if (pedigree.dialogOpen) {
             return;
