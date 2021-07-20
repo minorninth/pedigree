@@ -162,7 +162,7 @@ Vue.component("pedigree-ui", {
     jump: function () {
       pedigree.coordinatesDialog(
         'Enter the coordinates to jump to, of the form "3 2", separated by a comma or space.',
-        () => this.validateCoords(),
+        this.validateCoords.bind(this),
         (result) => {
           var x = result[0];
           var y = result[1];
@@ -205,7 +205,7 @@ Vue.component("pedigree-ui", {
     handleOneParent: function () {
       pedigree.coordinatesDialog(
         "Specify the parent of " + this.posStr(),
-        () => this.validateCoords(),
+        this.validateCoords.bind(this),
         (result) => {
           var x = result[0];
           var y = result[1];
@@ -216,7 +216,7 @@ Vue.component("pedigree-ui", {
     handleSecondOfTwoParents: function (fx, fy) {
       pedigree.coordinatesDialog(
         "Now please specify the mother of " + this.posStr() + ".",
-        () => this.validateCoords(),
+        this.validateCoords.bind(this),
         (result) => {
           var mx = result[0];
           var my = result[1];
@@ -282,7 +282,7 @@ Vue.component("pedigree-ui", {
     handleFirstOfTwoParents: function () {
       pedigree.coordinatesDialog(
         "Please specify the father of " + this.posStr() + " first.",
-        () => this.validateCoords(),
+        this.validateCoords.bind(this),
         (result) => {
           var fx = result[0];
           var fy = result[1];
