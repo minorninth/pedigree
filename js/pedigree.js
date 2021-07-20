@@ -2034,6 +2034,26 @@ pedigree.Pedigree.prototype.renderHtml = function(doc, container) {
   this.render();
 };
 
+pedigree.Pedigree.prototype.save = function() {
+  let allowed = [
+      'data', 'text', 'unions',
+      'gender', 'affected', 'carrier', 'dead',
+      'pregnancy', 'twin', 'proband', 'parents',
+      'label', 'multiple'];
+  for (var row_index in this.data) {
+    allowed.push(row_index);
+  }
+
+  let data = JSON.stringify(this, allowed, 4);
+  var blob = new Blob([data], {type: 'text/json'});
+  var elem = window.document.createElement('a');
+  elem.href = window.URL.createObjectURL(blob);
+  elem.download = 'pedigree.json';
+  document.body.appendChild(elem);
+  elem.click();
+  document.body.removeChild(elem);
+};
+
 var inpdf = 0;
 
 pedigree.Pedigree.prototype.renderPdf = function() {

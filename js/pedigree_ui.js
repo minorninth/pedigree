@@ -150,9 +150,11 @@ Vue.component("pedigree-ui", {
         }
       );
     },
-    save: function () {
-      this.pedigree.plot();
+    exportPdf: function () {
       this.pedigree.renderPdf();
+    },
+    save: function () {
+      this.pedigree.save();
     },
     validateCoords: function (coords) {
       var x = coords[0];
@@ -642,6 +644,7 @@ Vue.component("pedigree-ui", {
       };
 
       var globalKeypressAsciiMap = {
+        e: this.exportPdf,
         j: this.jump,
         n: this.promptForNewPedigree,
         s: this.save,
@@ -1029,6 +1032,7 @@ Vue.component("pedigree-ui", {
       this.addMenuItem(this.fileMenu, "Set Title...", this.editPageTitle);
       this.addMenuItem(this.fileMenu, "Open...");
       this.addMenuItem(this.fileMenu, "Save", this.save);
+      this.addMenuItem(this.fileMenu, "Export PDF", this.exportPdf);
 
       this.addMenuItem(this.editMenu, "Undo", this.undo);
       this.addMenuItem(this.editMenu, "Redo", this.redo);
