@@ -212,7 +212,7 @@ pedigree.coordinatesDialog = function(
 
   var ok = document.createElement('button');
   ok.innerHTML = 'OK';
-  ok.addEventListener(ok, 'click', function() {
+  ok.addEventListener('click', function() {
     var result = parseValue(textbox.value);
     pedigree.closeDialog();
     if (result && validate(result)) {

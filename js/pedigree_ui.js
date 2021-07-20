@@ -792,22 +792,6 @@ Vue.component("pedigree-ui", {
         globalKeyPressHandler.bind(this),
         false
       );
-
-      var currentFocus = document.activeElement;
-      currentFocus.classList.add("focus");
-
-      function globalFocusHandler(evt) {
-        currentFocus.classList.remove("focus");
-        evt = evt || window.event;
-        currentFocus = evt.target || evt.srcElement;
-        currentFocus.classList.add("focus");
-      }
-
-      document.addEventListener(
-        "focusin",
-        globalFocusHandler.bind(this),
-        false
-      );
     },
     getElement: function (x, y) {
       if (x >= 0) {
@@ -1036,7 +1020,6 @@ Vue.component("pedigree-ui", {
       this.fileMenu = this.addMenu("File");
       this.editMenu = this.addMenu("Edit");
       this.pedigreeMenu = this.addMenu("Pedigree");
-      this.viewMenu = this.addMenu("View");
 
       this.addMenuItem(
         this.fileMenu,
@@ -1074,8 +1057,6 @@ Vue.component("pedigree-ui", {
         "Describe entire pedgiree",
         this.describeAll
       );
-
-      this.addMenuItem(this.viewMenu, "Zoom...");
 
       var frame_wrapper = document.getElementById("pedigree_frame_wrapper");
 

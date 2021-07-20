@@ -143,14 +143,14 @@ body {
   user-select: none;
 }
 
-.menu_item.focus,
+.menu_item:focus,
 .menu_item:hover {
   background: #eeeeaa;
   background: linear-gradient(to bottom, #ffffbb, #dddd99);
 }
 
 .menu_title:hover,
-.menu_title.focus {
+.menu_title:focus {
   color: #fff;
   background: #6aa;
 }
@@ -198,7 +198,7 @@ body {
   outline: none;
 }
 
-.toolbar button.focus,
+.toolbar button:focus,
 .toolbar button:hover {
   border: 1px solid #000;
   background: #ee9;
@@ -357,7 +357,11 @@ body {
 
 .pedigree .row * {
   position: absolute;
-  outline: none;
+}
+
+.pedigree .row *:focus {
+    outline: 3px dashed #00009933;
+    outline-offset: 42px;
 }
 
 .pedigree .row .scale20 {
