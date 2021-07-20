@@ -2037,7 +2037,7 @@ pedigree.Pedigree.prototype.renderHtml = function(doc, container) {
 var inpdf = 0;
 
 pedigree.Pedigree.prototype.renderPdf = function() {
-  this.pdf = new jsPDF('landscape', 'pt', 'letter');
+  this.pdf = new jspdf.jsPDF('landscape', 'pt', 'letter');
 
 /**
   pdf.setProperties({
@@ -2083,11 +2083,9 @@ pedigree.Pedigree.prototype.renderPdf = function() {
 
   this.leftOffset = LEFT;
   this.topOffset = TOP + this.text_height;
-  alert('pdf 3');
   inpdf = 1;
   this.render();
   inpdf = 0;
-  alert('pdf 4');
 
   if (this.Xmax * this.scale / 72. + (2 * Xmargin) > Xpage) {
     this.pdf.addPage();
@@ -2096,10 +2094,7 @@ pedigree.Pedigree.prototype.renderPdf = function() {
     this.render();
   }
 
-  console.log('Outputting the pdf');
-  var dataurl = this.pdf.output('datauristring');
-  console.log('Done outputting the pdf');
-  var w = window.open(dataurl, '_blank');
+  this.pdf.save('pedigree.pdf');
 };
 
 pedigree.Pedigree.prototype.render = function() {
