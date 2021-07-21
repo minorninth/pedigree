@@ -170,6 +170,12 @@ body {
   background: #dee;
 }
 
+.toolbar .tip {
+  font-family: arial, helvetica, sans-serif;
+  font-size: 14px;
+  padding: 100px 18px 0 18px;
+}
+
 #footer {
   position: absolute;
   left: 0px;
@@ -203,6 +209,37 @@ body {
   border: 1px solid #000;
   background: #ee9;
   background: linear-gradient(to bottom, #ffffe0, #dd8);
+}
+
+.toolbar button .shortcutwrap {
+  position: relative;
+  right: -16px;
+  top: -16px;
+  height: 0px;
+  display: block;
+  text-align: right;
+}
+
+.toolbar button .shortcut {
+  border-radius: 8px;
+  z-index: 999;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  padding: 3px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #09c;
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.toolbar.showshortcuts button .shortcut {
+  opacity: 1;
+}
+
+.toolbar button:hover .shortcut {
+  opacity: 1;
 }
 
 .toolbar .img {

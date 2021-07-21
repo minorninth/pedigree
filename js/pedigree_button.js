@@ -2,9 +2,13 @@ Vue.component("pedigree-button", {
   props: {
     buttontype: String,
     caption: String,
+    shortcut: String,
   },
   template: `
-    <button v-on:click="onClick()">
+    <button v-on:click="onClick()" :title="titleStr">
+      <div class="shortcutwrap">
+        <div class="shortcut"> {{ titleStr }} </div>
+      </div>
       <div :class="imgClass">
         <div :class="overlayClass"/>
       </div>
@@ -22,6 +26,9 @@ Vue.component("pedigree-button", {
     img2Class: function () {
       return "img2 " + this.buttontype;
     },
+    titleStr: function() {
+      return this.shortcut ? this.shortcut : "";
+    }
   },
   methods: {
     onClick: function () {

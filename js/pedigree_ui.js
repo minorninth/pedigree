@@ -9,22 +9,25 @@ Vue.component("pedigree-ui", {
       </div>
       <div class="toolbar">
         <div style="height: 172px;">
-          <pedigree-button buttontype="male" caption="Male" v-on:click="male()"/>
-          <pedigree-button buttontype="female" caption="Female" v-on:click="female()"/>
-          <pedigree-button buttontype="nogender" caption="No Gender" v-on:click="nogender()"/>
-          <pedigree-button buttontype="pregloss" caption="Preg. Loss" v-on:click="pregloss()"/>
+          <pedigree-button buttontype="male" caption="Male" shortcut="M" v-on:click="male()"/>
+          <pedigree-button buttontype="female" caption="Female" shortcut="F" v-on:click="female()"/>
+          <pedigree-button buttontype="nogender" caption="No Gender" shortcut="Shift+U" v-on:click="nogender()"/>
+          <pedigree-button buttontype="pregloss" caption="Preg. Loss" shortcut="B"  v-on:click="pregloss()"/>
         </div>
         <div style="height: 96px;">
-          <pedigree-button buttontype="union" caption="Union" v-on:click="union()"/>
-          <pedigree-button buttontype="grab" caption="Grab Child" v-on:click="grab()"/>
+          <pedigree-button buttontype="union" caption="Union" shortcut="U" v-on:click="union()"/>
+          <pedigree-button buttontype="grab" caption="Grab Child" shortcut="G" v-on:click="grab()"/>
         </div>
-        <div>
-          <pedigree-button buttontype="carrier" caption="Carrier" v-on:click="carrier()"/>
-          <pedigree-button buttontype="affected" caption="Affected" v-on:click="affected()"/>
-          <pedigree-button buttontype="dead" caption="Dead" v-on:click="dead()"/>
-          <pedigree-button buttontype="proband" caption="Proband" v-on:click="proband()"/>
-          <pedigree-button buttontype="twin" caption="Twin" v-on:click="twin()"/>
-          <pedigree-button buttontype="pregnancy" caption="Pregnancy" v-on:click="pregnancy()"/>
+        <div style="height: 224px;">
+          <pedigree-button buttontype="carrier" caption="Carrier" shortcut="C" v-on:click="carrier()"/>
+          <pedigree-button buttontype="affected" caption="Affected" shortcut="A" v-on:click="affected()"/>
+          <pedigree-button buttontype="dead" caption="Dead" shortcut="D" v-on:click="dead()"/>
+          <pedigree-button buttontype="proband" caption="Proband" shortcut="P" v-on:click="proband()"/>
+          <pedigree-button buttontype="twin" caption="Twin" shortcut="T" v-on:click="twin()"/>
+          <pedigree-button buttontype="pregnancy" caption="Pregnancy" shortcut="Shift+P" v-on:click="pregnancy()"/>
+        </div>
+        <div class="tip">
+          Hold Shift to learn keyboard shortcuts.
         </div>
       </div>
       <div id="pedigree_frame_wrapper"></div>
@@ -812,6 +815,20 @@ Vue.component("pedigree-ui", {
         globalKeyPressHandler.bind(this),
         false
       );
+
+      function globalKeyUpDownHandler(evt) {
+        let toolbar = document.querySelector('.toolbar');
+        if (evt.key == 'Shift') {
+          if (evt.type == 'keydown')
+            toolbar.classList.add('showshortcuts');
+          else
+            toolbar.classList.remove('showshortcuts');
+        }
+      }
+      document.addEventListener("keydown", globalKeyUpDownHandler.bind(this), false);
+      document.addEventListener("keyup", globalKeyUpDownHandler.bind(this), false);
+      this.innerDoc.addEventListener("keydown", globalKeyUpDownHandler.bind(this), false);
+      this.innerDoc.addEventListener("keyup", globalKeyUpDownHandler.bind(this), false);
     },
     getElement: function (x, y) {
       if (x >= 0) {
