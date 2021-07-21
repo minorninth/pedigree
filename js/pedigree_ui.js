@@ -98,8 +98,6 @@ Vue.component("pedigree-ui", {
       this.navigate(0, 0);
     },
     replot: function () {
-      console.log("replot inner doc: " + this.innerDoc.body.outerHTML);
-
       try {
         this.container.innerHTML = "";
         this.pedigree.plot();
@@ -114,8 +112,6 @@ Vue.component("pedigree-ui", {
           throw e;
         }
       }
-
-      console.log("End of replot inner doc: " + this.innerDoc.body.outerHTML);
     },
     edit: function () {
       var x = this.pedigree.x;
@@ -155,6 +151,26 @@ Vue.component("pedigree-ui", {
     },
     save: function () {
       this.pedigree.save();
+    },
+    load: function () {
+      pedigree.loadDialog((result) => {
+        let newdata = JSON.parse(result);
+        this.pedigree = new pedigree.Pedigree();
+        for (let rowindex in newdata.data) {
+          let cells = [];
+          for (let j = 0; j < newdata.data[rowindex].length; j++) {
+            cells.push(new pedigree.Node(newdata.data[rowindex][j]));
+          }
+          this.pedigree.data[rowindex] = cells;
+	}
+        this.pedigree.unions = newdata.unions;
+        this.pedigree.text = newdata.text;
+        this.pedigree.y = 1;
+        this.pedigree.x = -1;
+
+        this.container.innerHTML = "";
+        this.replot();
+      });
     },
     validateCoords: function (coords) {
       var x = coords[0];
@@ -647,6 +663,7 @@ Vue.component("pedigree-ui", {
         e: this.exportPdf,
         j: this.jump,
         n: this.promptForNewPedigree,
+        l: this.load,
         s: this.save,
         t: this.editPageTitle,
         w: this.describeAll,
@@ -1030,7 +1047,7 @@ Vue.component("pedigree-ui", {
         this.promptForNewPedigree
       );
       this.addMenuItem(this.fileMenu, "Set Title...", this.editPageTitle);
-      this.addMenuItem(this.fileMenu, "Open...");
+      this.addMenuItem(this.fileMenu, "Load", this.load);
       this.addMenuItem(this.fileMenu, "Save", this.save);
       this.addMenuItem(this.fileMenu, "Export PDF", this.exportPdf);
 
@@ -1082,8 +1099,6 @@ Vue.component("pedigree-ui", {
 
         this.innerDoc.body.appendChild(this.container);
 
-        console.log("New inner doc: " + this.innerDoc.body.outerHTML);
-
         var style = this.innerDoc.createElement("link");
         style.setAttribute("rel", "stylesheet");
         style.setAttribute("href", "pedigree.css");
@@ -1110,3 +1125,12 @@ Vue.component("pedigree-ui", {
     },
   },
 });
+
+// Indentation settings for Vim and Emacs.
+//
+// Local Variables:
+// js2-basic-offset: 2
+// indent-tabs-mode: nil
+// End:
+//
+// vim: et sts=2 sw=2

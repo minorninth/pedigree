@@ -243,6 +243,61 @@ pedigree.coordinatesDialog = function(
   }, 0);
 };
 
+pedigree.loadDialog = function(callback) {
+  var dialog = pedigree.createDialog();
+
+  var textLabel = document.createElement('label');
+  dialog.appendChild(textLabel);
+
+  var textDiv = document.createElement('div');
+  textDiv.innerHTML = 'Choose a pedigree file to load';
+  textLabel.appendChild(textDiv);
+
+  var picker = document.createElement('input');
+  picker.type = 'file';
+  picker.addEventListener('keydown', function(evt) {
+
+  });
+  textLabel.appendChild(picker);
+
+  var buttonRow = document.createElement('div');
+  dialog.appendChild(buttonRow);
+
+  var ok = document.createElement('button');
+  ok.innerHTML = 'OK';
+  ok.addEventListener('click', function() {
+    pedigree.closeDialog();
+    let files = picker.files;
+    let filename = files[0];
+    let reader = new FileReader();
+    reader.onload = function(event) {
+      callback(event.target.result);
+    };
+    reader.readAsText(filename);
+  });
+  buttonRow.appendChild(ok);
+
+  var cancel = pedigree.addCloseButton(buttonRow, 'Cancel');
+
+  pedigree.trapFocusInDialog(dialog, picker, cancel);
+  pedigree.addStandardDialogKeydownHandler();
+
+  ok.disabled = true;
+
+  picker.addEventListener('change', function(evt) {
+    window.setTimeout(function() {
+      var result = picker.value;
+      ok.disabled = !result;
+    }, 0);
+  });
+
+  dialog.style.display = 'block';
+
+  window.setTimeout(function() {
+    picker.focus();
+  }, 0);
+};
+
 pedigree.messageDialog = function(message) {
   var dialog = pedigree.createDialog();
 
