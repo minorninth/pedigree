@@ -14,6 +14,7 @@ pedigree.restoreFocusFromDialog = null;
 pedigree.createDialog = function() {
   var dialog = document.createElement('dialog');
   dialog.setAttribute('role', 'alertdialog');
+  dialog.setAttribute('aria-labelledby', 'dialogtitle');
   dialog.className = 'dialog';
   document.body.appendChild(dialog);
   pedigree.dialogOpen = dialog;
@@ -120,6 +121,7 @@ pedigree.textareaDialog = function(
   dialog.appendChild(textLabel);
 
   var textDiv = document.createElement('div');
+  textDiv.id = 'dialogtitle';
   textDiv.innerHTML = question;
   textLabel.appendChild(textDiv);
 
@@ -302,6 +304,7 @@ pedigree.messageDialog = function(message) {
   var dialog = pedigree.createDialog();
 
   var textDiv = document.createElement('h2');
+  textDiv.id = 'dialogtitle';
   textDiv.innerHTML = message;
   dialog.appendChild(textDiv);
 
@@ -327,6 +330,7 @@ pedigree.yesNoDialog = function(
   var dialog = pedigree.createDialog();
 
   var textDiv = document.createElement('h2');
+  textDiv.id = 'dialogtitle';
   textDiv.innerHTML = question;
   dialog.appendChild(textDiv);
 
