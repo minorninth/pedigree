@@ -2198,6 +2198,8 @@ pedigree.Pedigree.prototype.render = function() {
   }
 };
 
+export default pedigree;
+
 // Indentation settings for Vim and Emacs.
 //
 // Local Variables:

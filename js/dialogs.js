@@ -2,39 +2,41 @@
 // Common dialog globals
 //
 
-pedigree.dialogOpen = null;
-pedigree.dialogFocusListener = null;
-pedigree.dialogKeydownListener = null;
-pedigree.restoreFocusFromDialog = null;
+var dialogs = {};
+
+dialogs.dialogOpen = null;
+dialogs.dialogFocusListener = null;
+dialogs.dialogKeydownListener = null;
+dialogs.restoreFocusFromDialog = null;
 
 //
 // Common dialog methods
 //
 
-pedigree.createDialog = function() {
+dialogs.createDialog = function() {
   var dialog = document.createElement('dialog');
   dialog.setAttribute('role', 'alertdialog');
   dialog.setAttribute('aria-labelledby', 'dialogtitle');
   dialog.className = 'dialog';
   document.body.appendChild(dialog);
-  pedigree.dialogOpen = dialog;
+  dialogs.dialogOpen = dialog;
   return dialog;
 };
 
-pedigree.addCloseButton = function(parent, title) {
+dialogs.addCloseButton = function(parent, title) {
   var button = document.createElement('button');
   button.innerHTML = title;
   button.addEventListener('click', function() {
-    pedigree.closeDialog();
+    dialogs.closeDialog();
   });
   parent.appendChild(button);
   return button;    
 };
 
-pedigree.trapFocusInDialog = function(dialog, firstControl, lastControl) {
-  pedigree.dialogFocusListener = function() {
+dialogs.trapFocusInDialog = function(dialog, firstControl, lastControl) {
+  dialogs.dialogFocusListener = function() {
     window.setTimeout(function() {
-      if (!pedigree.dialogOpen) {
+      if (!dialogs.dialogOpen) {
         return;
       }
 
@@ -52,9 +54,9 @@ pedigree.trapFocusInDialog = function(dialog, firstControl, lastControl) {
       }
     }, 0);
   };
-  document.addEventListener('focus', pedigree.dialogFocusListener, true);
-  document.addEventListener('blur', pedigree.dialogFocusListener, true);
-  document.addEventListener('focusout', pedigree.dialogFocusListener, true);
+  document.addEventListener('focus', dialogs.dialogFocusListener, true);
+  document.addEventListener('blur', dialogs.dialogFocusListener, true);
+  document.addEventListener('focusout', dialogs.dialogFocusListener, true);
 
   var sentinel = document.createElement('div');
   sentinel.tabIndex = 0;
@@ -67,20 +69,20 @@ pedigree.trapFocusInDialog = function(dialog, firstControl, lastControl) {
   dialog.appendChild(sentinel);
 };
 
-pedigree.addStandardDialogKeydownHandler = function() {
-  pedigree.dialogKeydownListener = function(evt) {
-    if (!pedigree.dialogOpen) {
+dialogs.addStandardDialogKeydownHandler = function() {
+  dialogs.dialogKeydownListener = function(evt) {
+    if (!dialogs.dialogOpen) {
       return;
     }
     if (evt.keyCode == 27) { // Escape
-      pedigree.closeDialog();
+      dialogs.closeDialog();
       return;
     }
-    var text = pedigree.dialogOpen.querySelectorAll('input,textarea');
+    var text = dialogs.dialogOpen.querySelectorAll('input,textarea');
     if (text.length) {
       return;
     }
-    var buttons = pedigree.dialogOpen.querySelectorAll('button');
+    var buttons = dialogs.dialogOpen.querySelectorAll('button');
     for (var i = 0; i < buttons.length; i++) {
       console.log('Button ' + i + ': ' + buttons[i].innerHTML.charCodeAt(0));
       if (evt.keyCode == buttons[i].innerHTML.charCodeAt(0)) {
@@ -88,24 +90,24 @@ pedigree.addStandardDialogKeydownHandler = function() {
       }
     }
   };
-  window.addEventListener('keydown', pedigree.dialogKeydownListener, true);
+  window.addEventListener('keydown', dialogs.dialogKeydownListener, true);
 };
 
-pedigree.closeDialog = function() {
+dialogs.closeDialog = function() {
   console.log('CLOSE');
-  if (!pedigree.dialogOpen) {
+  if (!dialogs.dialogOpen) {
     return;
   }
 
-  pedigree.dialogOpen.parentElement.removeChild(pedigree.dialogOpen);
-  window.removeEventListener('focus', pedigree.dialogFocusListener, true);
-  window.removeEventListener('blur', pedigree.dialogFocusListener, true);
-  window.removeEventListener('keydown', pedigree.dialogKeydownListener, true);
+  dialogs.dialogOpen.parentElement.removeChild(dialogs.dialogOpen);
+  window.removeEventListener('focus', dialogs.dialogFocusListener, true);
+  window.removeEventListener('blur', dialogs.dialogFocusListener, true);
+  window.removeEventListener('keydown', dialogs.dialogKeydownListener, true);
 
-  pedigree.dialogOpen = null;
+  dialogs.dialogOpen = null;
 
-  if (pedigree.restoreFocusFromDialog) {
-    pedigree.restoreFocusFromDialog();
+  if (dialogs.restoreFocusFromDialog) {
+    dialogs.restoreFocusFromDialog();
   }
 };
 
@@ -113,9 +115,9 @@ pedigree.closeDialog = function() {
 // Specific dialogs
 //
 
-pedigree.textareaDialog = function(
+dialogs.textareaDialog = function(
     question, initialText, callback) {
-  var dialog = pedigree.createDialog();
+  var dialog = dialogs.createDialog();
 
   var textLabel = document.createElement('label');
   dialog.appendChild(textLabel);
@@ -131,7 +133,7 @@ pedigree.textareaDialog = function(
   textarea.addEventListener('keydown', function(evt) {
     if (evt.keyCode == 13) {
       var result = textarea.value;
-      pedigree.closeDialog();
+      dialogs.closeDialog();
       callback(result);
       evt.stopPropagation();
       evt.preventDefault();
@@ -146,15 +148,15 @@ pedigree.textareaDialog = function(
   ok.innerHTML = 'OK';
   ok.addEventListener('click', function() {
     var result = textarea.value;
-    pedigree.closeDialog();
+    dialogs.closeDialog();
     callback(result);
   });
   buttonRow.appendChild(ok);
 
-  var cancel = pedigree.addCloseButton(buttonRow, 'Cancel');
+  var cancel = dialogs.addCloseButton(buttonRow, 'Cancel');
 
-  pedigree.trapFocusInDialog(dialog, textarea, cancel);
-  pedigree.addStandardDialogKeydownHandler();
+  dialogs.trapFocusInDialog(dialog, textarea, cancel);
+  dialogs.addStandardDialogKeydownHandler();
 
   dialog.style.display = 'block';
 
@@ -163,9 +165,9 @@ pedigree.textareaDialog = function(
   }, 0);
 };
 
-pedigree.coordinatesDialog = function(
+dialogs.coordinatesDialog = function(
     question, validate, callback) {
-  var dialog = pedigree.createDialog();
+  var dialog = dialogs.createDialog();
 
   var textLabel = document.createElement('label');
   dialog.appendChild(textLabel);
@@ -201,7 +203,7 @@ pedigree.coordinatesDialog = function(
   textbox.addEventListener('keydown', function(evt) {
     if (evt.keyCode == 13) {
       var result = parseValue(textbox.value);
-      pedigree.closeDialog();
+      dialogs.closeDialog();
       if (result && validate(result)) {
         callback(result);
       }
@@ -216,17 +218,17 @@ pedigree.coordinatesDialog = function(
   ok.innerHTML = 'OK';
   ok.addEventListener('click', function() {
     var result = parseValue(textbox.value);
-    pedigree.closeDialog();
+    dialogs.closeDialog();
     if (result && validate(result)) {
       callback(result);
     }
   });
   buttonRow.appendChild(ok);
 
-  var cancel = pedigree.addCloseButton(buttonRow, 'Cancel');
+  var cancel = dialogs.addCloseButton(buttonRow, 'Cancel');
 
-  pedigree.trapFocusInDialog(dialog, textbox, cancel);
-  pedigree.addStandardDialogKeydownHandler();
+  dialogs.trapFocusInDialog(dialog, textbox, cancel);
+  dialogs.addStandardDialogKeydownHandler();
 
   var result = parseValue(textbox.value);
   ok.disabled = !result || !validate(result);
@@ -245,8 +247,8 @@ pedigree.coordinatesDialog = function(
   }, 0);
 };
 
-pedigree.loadDialog = function(callback) {
-  var dialog = pedigree.createDialog();
+dialogs.loadDialog = function(callback) {
+  var dialog = dialogs.createDialog();
 
   var textLabel = document.createElement('label');
   dialog.appendChild(textLabel);
@@ -268,7 +270,7 @@ pedigree.loadDialog = function(callback) {
   var ok = document.createElement('button');
   ok.innerHTML = 'OK';
   ok.addEventListener('click', function() {
-    pedigree.closeDialog();
+    dialogs.closeDialog();
     let files = picker.files;
     let filename = files[0];
     let reader = new FileReader();
@@ -279,10 +281,10 @@ pedigree.loadDialog = function(callback) {
   });
   buttonRow.appendChild(ok);
 
-  var cancel = pedigree.addCloseButton(buttonRow, 'Cancel');
+  var cancel = dialogs.addCloseButton(buttonRow, 'Cancel');
 
-  pedigree.trapFocusInDialog(dialog, picker, cancel);
-  pedigree.addStandardDialogKeydownHandler();
+  dialogs.trapFocusInDialog(dialog, picker, cancel);
+  dialogs.addStandardDialogKeydownHandler();
 
   ok.disabled = true;
 
@@ -300,8 +302,8 @@ pedigree.loadDialog = function(callback) {
   }, 0);
 };
 
-pedigree.messageDialog = function(message) {
-  var dialog = pedigree.createDialog();
+dialogs.messageDialog = function(message) {
+  var dialog = dialogs.createDialog();
 
   var textDiv = document.createElement('h2');
   textDiv.id = 'dialogtitle';
@@ -311,10 +313,10 @@ pedigree.messageDialog = function(message) {
   var buttonRow = document.createElement('div');
   dialog.appendChild(buttonRow);
 
-  var ok = pedigree.addCloseButton(buttonRow, 'OK');
+  var ok = dialogs.addCloseButton(buttonRow, 'OK');
 
-  pedigree.trapFocusInDialog(dialog, ok, ok);
-  pedigree.addStandardDialogKeydownHandler();
+  dialogs.trapFocusInDialog(dialog, ok, ok);
+  dialogs.addStandardDialogKeydownHandler();
 
   dialog.style.display = 'block';
 
@@ -323,11 +325,11 @@ pedigree.messageDialog = function(message) {
   }, 0);
 };
 
-pedigree.yesNoDialog = function(
+dialogs.yesNoDialog = function(
     question,
     yesText, noText, maybeText,
     yesCallback, noCallback, maybeCallback) {
-  var dialog = pedigree.createDialog();
+  var dialog = dialogs.createDialog();
 
   var textDiv = document.createElement('h2');
   textDiv.id = 'dialogtitle';
@@ -340,7 +342,7 @@ pedigree.yesNoDialog = function(
   var yes = document.createElement('button');
   yes.innerHTML = yesText;
   yes.addEventListener('click', function() {
-    pedigree.closeDialog();
+    dialogs.closeDialog();
     yesCallback();
   });
   buttonRow.appendChild(yes);
@@ -348,7 +350,7 @@ pedigree.yesNoDialog = function(
   var no = document.createElement('button');
   no.innerHTML = noText;
   no.addEventListener('click', function() {
-    pedigree.closeDialog();
+    dialogs.closeDialog();
     noCallback();
   });
   buttonRow.appendChild(no);
@@ -357,14 +359,14 @@ pedigree.yesNoDialog = function(
     var maybe = document.createElement('button');
     maybe.innerHTML = maybeText;
     maybe.addEventListener('click', function() {
-      pedigree.closeDialog();
+      dialogs.closeDialog();
       maybeCallback();
     });
     buttonRow.appendChild(maybe);
   }
 
-  pedigree.trapFocusInDialog(dialog, yes, maybe ? maybe : no);
-  pedigree.addStandardDialogKeydownHandler();
+  dialogs.trapFocusInDialog(dialog, yes, maybe ? maybe : no);
+  dialogs.addStandardDialogKeydownHandler();
 
   dialog.style.display = 'block';
 
@@ -373,3 +375,4 @@ pedigree.yesNoDialog = function(
   }, 0);
 };
 
+export default dialogs;

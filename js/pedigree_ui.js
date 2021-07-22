@@ -1,3 +1,7 @@
+import "./pedigree_button.js"
+import pedigree from "./pedigree.js"
+import dialogs from "./dialogs.js"
+
 Vue.component("pedigree-ui", {
   template: `
     <div>
@@ -35,7 +39,7 @@ Vue.component("pedigree-ui", {
     </div>
   `,
   mounted() {
-    this.pedigree = tu2;
+    this.pedigree = new pedigree.Pedigree();
     this.buildInterface();
     setTimeout(() => {
       this.run();
@@ -110,7 +114,7 @@ Vue.component("pedigree-ui", {
         console.log("Replot recover because " + e.message);
         this.recover();
         if (e instanceof PedigreeException) {
-          pedigree.messageDialog(e.message);
+          dialogs.messageDialog(e.message);
         } else {
           throw e;
         }
@@ -124,7 +128,7 @@ Vue.component("pedigree-ui", {
 
       if (x == -1) return;
 
-      pedigree.textareaDialog(
+      dialogs.textareaDialog(
         "Enter a new description for " + this.posStr(x, y),
         n.label,
         (result) => {
@@ -137,7 +141,7 @@ Vue.component("pedigree-ui", {
       );
     },
     editPageTitle: function () {
-      pedigree.textareaDialog(
+      dialogs.textareaDialog(
         "Enter the text to go at the top of the page.",
         this.pedigree.text,
         (result) => {
@@ -156,7 +160,7 @@ Vue.component("pedigree-ui", {
       this.pedigree.save();
     },
     load: function () {
-      pedigree.loadDialog((result) => {
+      dialogs.loadDialog((result) => {
         let newdata = JSON.parse(result);
         this.pedigree = new pedigree.Pedigree();
         for (let rowindex in newdata.data) {
@@ -181,7 +185,7 @@ Vue.component("pedigree-ui", {
       return this.pedigree.data[y] && this.pedigree.data[y][x];
     },
     jump: function () {
-      pedigree.coordinatesDialog(
+      dialogs.coordinatesDialog(
         'Enter the coordinates to jump to, of the form "3 2", separated by a comma or space.',
         this.validateCoords.bind(this),
         (result) => {
@@ -224,7 +228,7 @@ Vue.component("pedigree-ui", {
       this.replot();
     },
     handleOneParent: function () {
-      pedigree.coordinatesDialog(
+      dialogs.coordinatesDialog(
         "Specify the parent of " + this.posStr(),
         this.validateCoords.bind(this),
         (result) => {
@@ -235,7 +239,7 @@ Vue.component("pedigree-ui", {
       );
     },
     handleSecondOfTwoParents: function (fx, fy) {
-      pedigree.coordinatesDialog(
+      dialogs.coordinatesDialog(
         "Now please specify the mother of " + this.posStr() + ".",
         this.validateCoords.bind(this),
         (result) => {
@@ -243,7 +247,7 @@ Vue.component("pedigree-ui", {
           var my = result[1];
           var m = this.pedigree.data[my][mx];
           if (m.gender != "female") {
-            pedigree.messageDialog(this.posStr(mx, my) + " is not female.");
+            dialogs.messageDialog(this.posStr(mx, my) + " is not female.");
             return;
           }
 
@@ -258,7 +262,7 @@ Vue.component("pedigree-ui", {
         var ux2 = this.pedigree.unions[i][2];
         var uy2 = this.pedigree.unions[i][3];
         if (ux1 == fx && uy1 == fy) {
-          pedigree.yesNoDialog(
+          dialogs.yesNoDialog(
             "Is " + this.posStr(ux2, uy2) + " the mother?",
             "Yes",
             "No",
@@ -277,7 +281,7 @@ Vue.component("pedigree-ui", {
           );
           return;
         } else if (ux2 == fx && uy2 == fy) {
-          pedigree.yesNoDialog(
+          dialogs.yesNoDialog(
             "Is " + this.posStr(ux1, uy1) + " the mother?",
             "Yes",
             "No",
@@ -301,7 +305,7 @@ Vue.component("pedigree-ui", {
       this.handleSecondOfTwoParents(fx, fy);
     },
     handleFirstOfTwoParents: function () {
-      pedigree.coordinatesDialog(
+      dialogs.coordinatesDialog(
         "Please specify the father of " + this.posStr() + " first.",
         this.validateCoords.bind(this),
         (result) => {
@@ -309,7 +313,7 @@ Vue.component("pedigree-ui", {
           var fy = result[1];
           var f = this.pedigree.data[fy][fx];
           if (f.gender != "male") {
-            pedigree.messageDialog(this.posStr(fx, fy) + " is not male.");
+            dialogs.messageDialog(this.posStr(fx, fy) + " is not male.");
             return;
           }
 
@@ -328,7 +332,7 @@ Vue.component("pedigree-ui", {
       var x = this.pedigree.x;
       var y = this.pedigree.y;
       if (y == 1) {
-        pedigree.messageDialog(
+        dialogs.messageDialog(
           "You are in the top row, there are no parents to specify. " +
             "Press up arrow to create a row for this person's parents."
         );
@@ -360,7 +364,7 @@ Vue.component("pedigree-ui", {
       if (this.pedigree.data[y][x].parents) {
         clearPrompt = "Clear existing parents";
       }
-      pedigree.yesNoDialog(
+      dialogs.yesNoDialog(
         "Set parents of " + this.posStr(x, y) + ":",
         "1 parent",
         "2 parents",
@@ -389,7 +393,7 @@ Vue.component("pedigree-ui", {
       this.navigate(0, y - this.pedigree.y);
     },
     promptInsertRowAtTop: function () {
-      pedigree.yesNoDialog(
+      dialogs.yesNoDialog(
         "Insert new row at top?",
         "Yes",
         "No",
@@ -603,15 +607,15 @@ Vue.component("pedigree-ui", {
       }
     },
     describeAll: function () {
-      pedigree.messageDialog(this.pedigree.describe_all());
+      dialogs.messageDialog(this.pedigree.describe_all());
     },
     describe: function () {
-      pedigree.messageDialog(
+      dialogs.messageDialog(
         this.pedigree.describe(this.pedigree.x, this.pedigree.y)
       );
     },
     longDescribe: function () {
-      pedigree.messageDialog(
+      dialogs.messageDialog(
         this.pedigree.longdescribe(this.pedigree.x, this.pedigree.y)
       );
     },
@@ -625,7 +629,7 @@ Vue.component("pedigree-ui", {
         console.log("executeCommand recover because " + e.message);
         this.recover();
         if (e instanceof PedigreeException) {
-          pedigree.messageDialog(e.message);
+          dialogs.messageDialog(e.message);
         } else {
           throw e;
         }
@@ -692,8 +696,8 @@ Vue.component("pedigree-ui", {
         "mousedown",
         (evt) => {
           console.log('Click ' + evt);
-          if (pedigree.dialogOpen) {
-            pedigree.closeDialog();
+          if (dialogs.dialogOpen) {
+            dialogs.closeDialog();
             return;
           }
           var t = evt.target;
@@ -720,7 +724,7 @@ Vue.component("pedigree-ui", {
         "keydown",
         (evt) => {
           console.log("KEYDOWN " + evt.keyCode);
-          if (pedigree.dialogOpen) {
+          if (dialogs.dialogOpen) {
             return;
           }
           var cmd = keydownMap[evt.keyCode];
@@ -737,7 +741,7 @@ Vue.component("pedigree-ui", {
         "keypress",
         (evt) => {
           evt = evt || window.event;
-          if (pedigree.dialogOpen) {
+          if (dialogs.dialogOpen) {
             return;
           }
           console.log("KEYPRESS " + evt.charCode);
@@ -791,7 +795,7 @@ Vue.component("pedigree-ui", {
 
       function globalKeyPressHandler(evt) {
         evt = evt || window.event;
-        if (pedigree.dialogOpen) {
+        if (dialogs.dialogOpen) {
           return;
         }
         if (evt.altKey || evt.ctrlKey || evt.metaKey) {
