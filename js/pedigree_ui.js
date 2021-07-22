@@ -25,9 +25,9 @@ Vue.component("pedigree-ui", {
         <div style="height: 224px;">
           <pedigree-button buttontype="carrier" caption="Carrier" shortcut="C" v-on:click="carrier()"/>
           <pedigree-button buttontype="affected" caption="Affected" shortcut="A" v-on:click="affected()"/>
-          <pedigree-button buttontype="dead" caption="Dead" shortcut="D" v-on:click="dead()"/>
-          <pedigree-button buttontype="proband" caption="Proband" shortcut="P" v-on:click="proband()"/>
-          <pedigree-button buttontype="twin" caption="Twin" shortcut="T" v-on:click="twin()"/>
+          <pedigree-button buttontype="dead" caption="Dead" shortcut="K" v-on:click="dead()"/>
+          <pedigree-button buttontype="proband" caption="Proband" shortcut="X" v-on:click="proband()"/>
+          <pedigree-button buttontype="twin" caption="Twin" shortcut="Shift+T" v-on:click="twin()"/>
           <pedigree-button buttontype="pregnancy" caption="Pregnancy" shortcut="Shift+P" v-on:click="pregnancy()"/>
         </div>
         <div class="tip">

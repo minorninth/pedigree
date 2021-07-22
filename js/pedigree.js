@@ -1,5 +1,7 @@
 'use strict';
 
+import "https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js";
+
 function AssertException(message) {
    this.message = message;
 }

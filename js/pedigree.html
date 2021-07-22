@@ -10,17 +10,8 @@
       <pedigree-ui></pedigree-ui>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
-
-    <!--
-    <script src="third_party/jspdf/jspdf.js"></script>
-    <script src="third_party/jspdf/jspdf.plugin.standard_fonts_metrics.js"></script>
-    <script src="third_party/jspdf/jspdf.plugin.split_text_to_size.js"></script>
-    -->
-
     <script type="module">
+      import "https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js";
       import "./pedigree_ui.js";
       window.onload = () => {
         let app = new Vue({ el: "#app" });
