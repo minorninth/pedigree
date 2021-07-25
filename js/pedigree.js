@@ -1,7 +1,5 @@
 'use strict';
 
-import "https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js";
-
 function AssertException(message) {
    this.message = message;
 }
@@ -22,7 +20,7 @@ function assertEquals(s1, s2) {
   }
 }
 
-window.out = function(s) {
+function out(s) {
   console.log(s);
 };
 

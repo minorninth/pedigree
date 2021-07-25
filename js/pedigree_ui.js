@@ -1,4 +1,5 @@
 import "./pedigree_button.js"
+import "https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js";
 import pedigree from "./pedigree.js"
 import dialogs from "./dialogs.js"
 
