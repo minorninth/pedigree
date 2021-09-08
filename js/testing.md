@@ -1,1 +1,4 @@
-Type "jest pedigree" to run unit tests
+To run unit tests:
+
+env NODE_OPTIONS=--experimental-vm-modules npx jest pedigree
+
