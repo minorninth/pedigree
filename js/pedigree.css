@@ -1,399 +1,375 @@
 html,
 body {
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 #app {
-  position: absolute;
-  left: 0px;
-  top: 0px;
-  bottom: 0px;
-  right: 0px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    right: 0px;
 }
 
 .header {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  height: 50px;
-  right: 0px;
-  color: #ffe;
-  background: #099;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 50px;
+    right: 0px;
+    color: #ffe;
+    background: #099;
 }
 
 .header a {
-  color: #ffe;
+    color: #ffe;
 }
 
-.header > * {
-  font-family: arial, helvetica, sans-serif;
-  top: 0px;
-  height: 50px;
-  display: inline-block;
+.header>* {
+    font-family: arial, helvetica, sans-serif;
+    top: 0px;
+    height: 50px;
+    display: inline-block;
 }
 
 .header .app_title {
-  position: absolute;
-  left: 0px;
-  right: 250px;
-  font-size: 14pt;
-  font-weight: bold;
-  text-shadow: 2px 2px #066;
+    position: absolute;
+    left: 0px;
+    right: 250px;
+    font-size: 14pt;
+    font-weight: bold;
+    text-shadow: 2px 2px #066;
 }
 
 .header .app_title div {
-  height: 50px;
-  line-height: 50px;
-  padding-left: 20px;
+    height: 50px;
+    line-height: 50px;
+    padding-left: 20px;
 }
 
 .header #menu_container {
-  position: absolute;
-  left: 250px;
-  width: 300px;
-  top: 17px;
-  height: 32px;
+    position: absolute;
+    left: 250px;
+    width: 300px;
+    top: 17px;
+    height: 32px;
 }
 
 .header .pedigree_title {
-  position: absolute;
-  left: 550px;
-  right: 200px;
-  font-size: 12pt;
-  overflow: hidden;
+    position: absolute;
+    left: 550px;
+    right: 200px;
+    font-size: 12pt;
+    overflow: hidden;
 }
 
 .header .pedigree_title table {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-spacing: 0;
-  width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-spacing: 0;
+    width: 100%;
 }
 
 .header .pedigree_title td {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  vertical-align: middle;
-  text-align: center;
-  line-height: 24px;
-  height: 50px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 24px;
+    height: 50px;
 }
 
 .header .login_status {
-  position: absolute;
-  width: 200px;
-  right: 0px;
-  vertical-align: middle;
-  font-size: 12pt;
-  padding-right: 20px;
+    position: absolute;
+    width: 200px;
+    right: 0px;
+    vertical-align: middle;
+    font-size: 12pt;
+    padding-right: 20px;
 }
 
 .header .login_status div {
-  width: 100%;
-  text-align: right;
-  height: 50px;
-  line-height: 50px;
+    width: 100%;
+    text-align: right;
+    height: 50px;
+    line-height: 50px;
 }
 
 .menu_title {
-  float: left;
-  height: 20px;
-  line-height: 20px;
-  display: inline-block;
-  padding: 6px 16px;
-  border-top: 1px solid #ffe;
-  border-left: 1px solid #ffe;
-  border-right: 1px solid #ffe;
-  margin-right: -1px;
-  background: #066;
-  border-radius: 4px 4px 0 0;
-  outline: none;
-  cursor: pointer;
-  user-select: none;
+    float: left;
+    height: 20px;
+    line-height: 20px;
+    display: inline-block;
+    padding: 6px 16px;
+    border-top: 1px solid #ffe;
+    border-left: 1px solid #ffe;
+    border-right: 1px solid #ffe;
+    margin-right: -1px;
+    background: #066;
+    border-radius: 4px 4px 0 0;
+    outline: none;
+    cursor: pointer;
+    user-select: none;
 }
 
 .menu_wrap {
-  float: left;
-  position: relative;
-  width: 1px;
-  top: 26px;
-  z-index: 1;
+    float: left;
+    position: relative;
+    width: 1px;
+    top: 26px;
+    z-index: 1;
 }
 
 .menu {
-  width: 220px;
-  margin-left: -16px;
-  border-left: 1px solid #666;
-  border-right: 1px solid #666;
-  border-bottom: 1px solid #666;
-  border-radius: 0 0 5px 5px;
-  background: #ffffda;
-  background: linear-gradient(to bottom, #ffffff, #ffffda);
-  box-shadow: 0px 0px 10px #666;
+    width: 220px;
+    margin-left: -16px;
+    border-left: 1px solid #666;
+    border-right: 1px solid #666;
+    border-bottom: 1px solid #666;
+    border-radius: 0 0 5px 5px;
+    background: #ffffda;
+    background: linear-gradient(to bottom, #ffffff, #ffffda);
+    box-shadow: 0px 0px 10px #666;
 }
 
 .menu_item {
-  color: #666;
-  padding: 8px 15px;
-  outline: none;
-  cursor: pointer;
-  user-select: none;
+    color: #666;
+    padding: 8px 15px;
+    outline: none;
+    cursor: pointer;
+    user-select: none;
 }
 
 .menu_item:focus,
 .menu_item:hover {
-  background: #eeeeaa;
-  background: linear-gradient(to bottom, #ffffbb, #dddd99);
+    background: #eeeeaa;
+    background: linear-gradient(to bottom, #ffffbb, #dddd99);
 }
 
 .menu_title:hover,
 .menu_title:focus {
-  color: #fff;
-  background: #6aa;
+    color: #fff;
+    background: #6aa;
 }
 
 .menu_title.open {
-  color: #066;
-  background: #ffa;
+    color: #066;
+    background: #ffa;
 }
 
 .toolbar {
-  position: absolute;
-  top: 50px;
-  left: 0px;
-  width: 249px;
-  bottom: 30px;
-  border-right: 1px solid #000;
-  background: #dee;
+    position: absolute;
+    top: 50px;
+    left: 0px;
+    width: 249px;
+    bottom: 30px;
+    border-right: 1px solid #000;
+    background: #dee;
 }
 
 .toolbar .tip {
-  font-family: arial, helvetica, sans-serif;
-  font-size: 14px;
-  padding: 100px 18px 0 18px;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 14px;
+    padding: 100px 18px 0 18px;
 }
 
 #footer {
-  position: absolute;
-  left: 0px;
-  right: 0px;
-  bottom: 0px;
-  height: 30px;
-  color: #ffe;
-  background: #099;
-  font-family: arial, helvetica, sans-serif;
-  height: 30px;
-  line-height: 30px;
-  padding-left: 20px;
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 30px;
+    color: #ffe;
+    background: #099;
+    font-family: arial, helvetica, sans-serif;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 20px;
 }
 
 .toolbar button {
-  cursor: pointer;
-  display: block;
-  float: left;
-  width: 95px;
-  height: 60px;
-  margin-left: 20px;
-  border: 1px solid #999;
-  border-radius: 3px;
-  background: #ffd;
-  background: linear-gradient(to bottom, #fffff6, #f0f0c6);
-  outline: none;
+    cursor: pointer;
+    display: block;
+    float: left;
+    width: 95px;
+    height: 60px;
+    margin-left: 20px;
+    border: 1px solid #999;
+    border-radius: 3px;
+    background: #ffd;
+    background: linear-gradient(to bottom, #fffff6, #f0f0c6);
+    outline: none;
 }
 
 .toolbar button:focus,
 .toolbar button:hover {
-  border: 1px solid #000;
-  background: #ee9;
-  background: linear-gradient(to bottom, #ffffe0, #dd8);
+    border: 1px solid #000;
+    background: #ee9;
+    background: linear-gradient(to bottom, #ffffe0, #dd8);
 }
 
 .toolbar button .shortcutwrap {
-  position: relative;
-  right: -16px;
-  top: -16px;
-  height: 0px;
-  display: block;
-  text-align: right;
+    position: relative;
+    right: -16px;
+    top: -16px;
+    height: 0px;
+    display: block;
+    text-align: right;
 }
 
 .toolbar button .shortcut {
-  border-radius: 8px;
-  z-index: 999;
-  display: inline-block;
-  height: 20px;
-  line-height: 20px;
-  padding: 3px;
-  font-weight: bold;
-  color: #fff;
-  background-color: #09c;
-  opacity: 0;
-  transition: opacity 0.3s ease-out;
+    border-radius: 8px;
+    z-index: 999;
+    display: inline-block;
+    height: 20px;
+    line-height: 20px;
+    padding: 3px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #09c;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
 }
 
 .toolbar.showshortcuts button .shortcut {
-  opacity: 1;
+    opacity: 1;
 }
 
 .toolbar button:hover .shortcut {
-  opacity: 1;
+    opacity: 1;
 }
 
 .toolbar .img {
-  position: relative;
-  width: 100%;
-  height: 40px;
-  background-position: center -8px;
-  background-repeat: no-repeat;
+    position: relative;
+    width: 100%;
+    height: 40px;
+    background-position: center -8px;
+    background-repeat: no-repeat;
 }
 
 .toolbar .overlay {
-  position: relative;
-  width: 100%;
-  height: 40px;
-  background-position: center -8px;
-  background-repeat: no-repeat;
+    position: relative;
+    width: 100%;
+    height: 40px;
+    background-position: center -8px;
+    background-repeat: no-repeat;
 }
 
 .toolbar .img.male {
-  background-image: url("images/male-20.png");
+    background-image: url("images/male-20.png");
 }
 
 .toolbar .img.female {
-  background-image: url("images/female-20.png");
+    background-image: url("images/female-20.png");
 }
 
 .toolbar .img.nogender {
-  background-image: url("images/nogender-20.png");
+    background-image: url("images/nogender-20.png");
 }
 
 .toolbar .img.pregloss {
-  background-image: url("images/pregloss-20.png");
+    background-image: url("images/pregloss-20.png");
 }
 
 .toolbar .img.union {
-  background-image: url("images/male-20.png");
-  background-position: 4px -8px;
+    background-image: url("images/male-20.png");
+    background-position: 4px -8px;
 }
 
 .toolbar .overlay.union {
-  background-image: url("images/female-20.png");
-  background-position: 34px -8px;
+    background-image: url("images/female-20.png");
+    background-position: 34px -8px;
 }
 
 .toolbar .img.grab {
-  background-image: url("images/nogender-10.png");
-  background-position: center -6px;
+    background-image: url("images/nogender-10.png");
+    background-position: center -6px;
 }
 
 .toolbar .overlay.grab {
-  background-image: url("images/nogender-10.png");
-  background-position: center 10px;
+    background-image: url("images/nogender-10.png");
+    background-position: center 10px;
 }
 
 .toolbar .img.carrier {
-  background-image: url("images/nogender-20.png");
+    background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.carrier {
-  background-image: url("images/carrier-dot-20.png");
+    background-image: url("images/carrier-dot-20.png");
 }
 
 .toolbar .img.affected {
-  background-image: url("images/nogender-aff-20.png");
+    background-image: url("images/nogender-aff-20.png");
 }
 
 .toolbar .img.dead {
-  background-image: url("images/nogender-20.png");
+    background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.dead {
-  background-image: url("images/dead-slash-20.png");
+    background-image: url("images/dead-slash-20.png");
 }
 
 .toolbar .img.proband {
-  background-image: url("images/nogender-20.png");
+    background-image: url("images/nogender-20.png");
 }
 
 .toolbar .overlay.proband {
-  background-image: url("images/proband-arrow-20.png");
-  background-position: center -11px;
+    background-image: url("images/proband-arrow-20.png");
+    background-position: center -11px;
 }
 
 .toolbar .img.twin {
-  background-image: url("images/nogender-20.png");
-  background-position: 4px -8px;
+    background-image: url("images/nogender-20.png");
+    background-position: 4px -8px;
 }
 
 .toolbar .overlay.twin {
-  background-image: url("images/nogender-20.png");
-  background-position: 34px -8px;
-  opacity: 0.5;
+    background-image: url("images/nogender-20.png");
+    background-position: 34px -8px;
+    opacity: 0.5;
 }
 
 .toolbar .img.pregnancy {
-  background-image: url("images/nogender-20.png");
+    background-image: url("images/nogender-20.png");
 }
 
-.toolbar .overlay.pregnancy {
-}
+.toolbar .overlay.pregnancy {}
 
 .toolbar .overlay.pregnancy:after {
-  content: "P";
-  position: relative;
-  top: 8px;
-  left: 1px;
-  margin: 0px;
-  padding: 0px;
+    content: "P";
+    position: relative;
+    top: 8px;
+    left: 1px;
+    margin: 0px;
+    padding: 0px;
 }
 
 .toolbar .caption {
-  margin-top: -8px;
+    margin-top: -8px;
 }
 
-#pedigree_frame_wrapper {
-  position: absolute;
-  left: 250px;
-  top: 50px;
-  right: 0px;
-  bottom: 30px;
-}
-
-.pedigree_frame {
-  position: absolute;
-  top: 0px;
-  bottom: 0px;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #fffff8;
-}
-
-.pedigree_frame::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 11px;
-  height: 11px;
-}
-
-.pedigree_frame::-webkit-scrollbar-thumb {
-  border-radius: 8px;
-  border: 2px solid white; /* should match background, can't be transparent */
-  background-color: rgba(0, 0, 0, 0.3);
+#pedigree {
+    position: absolute;
+    left: 250px;
+    top: 50px;
+    right: 0px;
+    bottom: 30px;
 }
 
 .pedigree #title {
-  position: absolute;
-  width: 1000px;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 10pt;
-  text-align: center;
+    margin: 10px 0;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 10pt;
+    text-align: center;
 }
 
 .pedigree .row * {
-  position: absolute;
+    position: absolute;
 }
 
 .pedigree .row *:focus {
@@ -402,208 +378,208 @@ body {
 }
 
 .pedigree .row .scale20 {
-  width: 44px;
-  height: 44px;
+    width: 44px;
+    height: 44px;
 }
 
 .pedigree .row .scale20.male {
-  background-image: url("images/male-20.png");
+    background-image: url("images/male-20.png");
 }
 
 .pedigree .row .scale20.male.affected {
-  background-image: url("images/male-aff-20.png");
+    background-image: url("images/male-aff-20.png");
 }
 
 .pedigree .row .scale20.female {
-  background-image: url("images/female-20.png");
+    background-image: url("images/female-20.png");
 }
 
 .pedigree .row .scale20.female.affected {
-  background-image: url("images/female-aff-20.png");
+    background-image: url("images/female-aff-20.png");
 }
 
 .pedigree .row .scale20.nogender {
-  background-image: url("images/nogender-20.png");
+    background-image: url("images/nogender-20.png");
 }
 
 .pedigree .row .scale20.nogender.affected {
-  background-image: url("images/nogender-aff-20.png");
+    background-image: url("images/nogender-aff-20.png");
 }
 
 .pedigree .row .scale20.pregloss {
-  background-image: url("images/pregloss-20.png");
+    background-image: url("images/pregloss-20.png");
 }
 
 .pedigree .row .scale20.pregloss.affected {
-  background-image: url("images/pregloss-aff-20.png");
+    background-image: url("images/pregloss-aff-20.png");
 }
 
 .pedigree .row .scale20.carrier .carrier_dot {
-  width: 44px;
-  height: 44px;
-  background-image: url("images/carrier-dot-20.png");
+    width: 44px;
+    height: 44px;
+    background-image: url("images/carrier-dot-20.png");
 }
 
 .pedigree .row .scale20.proband .proband_arrow {
-  width: 44px;
-  height: 44px;
-  background-image: url("images/proband-arrow-20.png");
+    width: 44px;
+    height: 44px;
+    background-image: url("images/proband-arrow-20.png");
 }
 
 .pedigree .row .scale20.dead .dead_slash {
-  width: 44px;
-  height: 44px;
-  background-image: url("images/dead-slash-20.png");
+    width: 44px;
+    height: 44px;
+    background-image: url("images/dead-slash-20.png");
 }
 
 .pedigree .row .scale20.selected .highlight {
-  width: 44px;
-  height: 44px;
-  opacity: 0.2;
+    width: 44px;
+    height: 44px;
+    opacity: 0.2;
 }
 
 .pedigree .row .scale20.selected.focus .highlight {
-  opacity: 0.6;
+    opacity: 0.6;
 }
 
 .pedigree .row .scale20.male.selected .highlight {
-  background-image: url("images/male-selected-20.png");
+    background-image: url("images/male-selected-20.png");
 }
 
 .pedigree .row .scale20.female.selected .highlight {
-  background-image: url("images/female-selected-20.png");
+    background-image: url("images/female-selected-20.png");
 }
 
 .pedigree .row .scale20.nogender.selected .highlight {
-  background-image: url("images/nogender-selected-20.png");
+    background-image: url("images/nogender-selected-20.png");
 }
 
 .pedigree .row .scale20.pregloss.selected .highlight {
-  background-image: url("images/pregloss-selected-20.png");
+    background-image: url("images/pregloss-selected-20.png");
 }
 
 .pedigree .row .scale20.rowmarker.selected {
-  background-image: url("images/rowmarker-selected-20.png");
+    background-image: url("images/rowmarker-selected-20.png");
 }
 
 .pedigree .row .rowmarker {
-  text-align: center;
-  width: 44px;
-  height: 44px;
-  line-height: 44px;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 14pt;
-  font-weight: bold;
+    text-align: center;
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 14pt;
+    font-weight: bold;
 }
 
 .pedigree .hline {
-  position: absolute;
-  border-top: 1px solid #000;
-  height: 1px;
+    position: absolute;
+    border-top: 1px solid #000;
+    height: 1px;
 }
 
 .pedigree .vline {
-  position: absolute;
-  border-left: 1px solid #000;
-  width: 1px;
+    position: absolute;
+    border-left: 1px solid #000;
+    width: 1px;
 }
 
 .pedigree .diagonal_line {
-  position: absolute;
-  height: 0px;
-  border-top: 1px solid #000;
+    position: absolute;
+    height: 0px;
+    border-top: 1px solid #000;
 }
 
 .pedigree .row *.scale20 .ctr_label {
-  position: relative;
-  text-align: center;
-  line-height: 44px;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 10pt;
+    position: relative;
+    text-align: center;
+    line-height: 44px;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 10pt;
 }
 
 .pedigree .row * .text_label {
-  text-align: center;
-  top: 44px;
-  left: -40px;
-  width: 124px;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 10pt;
-  cursor: pointer;
+    text-align: center;
+    top: 44px;
+    left: -40px;
+    width: 124px;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 10pt;
+    cursor: pointer;
 }
 
 .pedigree .row .selected .text_label {
-  background-color: rgba(255, 255, 100, 0.2);
+    background-color: rgba(255, 255, 100, 0.2);
 }
 
 .pedigree .row .selected.focus .text_label {
-  background-color: rgba(255, 255, 100, 0.5);
+    background-color: rgba(255, 255, 100, 0.5);
 }
 
 .pedigree .row * .accessible_label {
-  height: 1px;
-  overflow: hidden;
+    height: 1px;
+    overflow: hidden;
 }
 
 .pedigree .row * .coords {
-  color: #0dd;
-  top: -4px;
-  left: -8px;
-  text-align: center;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 10pt;
-  cursor: pointer;
+    color: #0dd;
+    top: -4px;
+    left: -8px;
+    text-align: center;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 10pt;
+    cursor: pointer;
 }
 
 .pedigree .row [tabindex] {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .dialog {
-  position: absolute;
-  background: #fff;
-  top: 100px;
-  left: 200px;
-  width: 500px;
-  padding: 2em;
-  border: 1px solid #000;
-  border-radius: 2px;
-  box-shadow: 0px 0px 10px #666;
+    position: absolute;
+    background: #fff;
+    top: 100px;
+    left: 200px;
+    width: 500px;
+    padding: 2em;
+    border: 1px solid #000;
+    border-radius: 2px;
+    box-shadow: 0px 0px 10px #666;
 }
 
 .dialog label div {
-  font-family: arial, helvetica, sans-serif;
-  font-size: 14pt;
-  font-weight: bold;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 14pt;
+    font-weight: bold;
 }
 
 .dialog h2 {
-  margin: 0;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 14pt;
-  font-weight: bold;
+    margin: 0;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 14pt;
+    font-weight: bold;
 }
 
 .dialog textarea,
 button,
 input {
-  margin-top: 1em;
+    margin-top: 1em;
 }
 
 .dialog textarea {
-  width: 500px;
+    width: 500px;
 }
 
 .dialog button {
-  border: 1px solid #999;
-  border-radius: 5px;
-  padding: 0.5em 1em;
-  margin-right: 1em;
-  font-family: arial, helvetica, sans-serif;
-  font-size: 14pt;
+    border: 1px solid #999;
+    border-radius: 5px;
+    padding: 0.5em 1em;
+    margin-right: 1em;
+    font-family: arial, helvetica, sans-serif;
+    font-size: 14pt;
 }
 
 .dialog button.focus {
-  border: 1px solid #000;
-  background-color: #ffb;
+    border: 1px solid #000;
+    background-color: #ffb;
 }
