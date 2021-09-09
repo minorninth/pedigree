@@ -8,7 +8,7 @@ Vue.component("pedigree-ui", {
     <div>
       <div class="header">
         <div class="app_title">
-          <div>Pedigree Editor</div>
+          <div id="filename">Pedigree Editor</div>
         </div>
         <div id="menu_container" role="menubar"/>
       </div>
@@ -154,14 +154,60 @@ Vue.component("pedigree-ui", {
                 }
             );
         },
+        setFilename: function(filename) {
+            this.filename = filename;
+            if (filename) {
+                document.getElementById('filename').innerText = filename;
+            } else {
+                document.getElementById('filename').innerText = "Untitled";
+            }
+        },
+        ensureFilename: function(completion) {
+            if (this.filename) {
+                completion();
+                return;
+            }
+            dialogs.textareaDialog(
+                "Enter a filename for this pedigree.",
+                '',
+                (result) => {
+                    if (result != null) {
+                        this.setFilename(result);
+                        completion();
+                    }
+                }
+            );
+        },
         exportPdf: function() {
-            this.pedigree.renderPdf();
+            this.ensureFilename(() => {
+                let filename = this.filename + '.pdf';
+                out('Saving ' + filename);
+                this.pedigree.renderPdf(filename);
+            });
         },
         save: function() {
-            this.pedigree.save();
+            this.ensureFilename(() => {
+                let filename = this.filename + '.json';
+                out('Saving ' + filename);
+                this.pedigree.save(filename);
+            });
         },
         load: function() {
-            dialogs.loadDialog((result) => {
+            let recents = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                if (key == this.pedigree.storageKey) {
+                    continue;
+                }
+
+                let item = JSON.parse(localStorage.getItem(key));
+                if (item.type == 'pedigree' && item.data && item.data.data['1']) {
+                    recents.push({ key: key, name: item.name });
+                }
+            }
+
+            dialogs.loadDialog(recents, (filename, result) => {
+                this.setFilename(filename);
                 let newdata = JSON.parse(result);
                 this.pedigree = new pedigree.Pedigree();
                 for (let rowindex in newdata.data) {
@@ -175,6 +221,7 @@ Vue.component("pedigree-ui", {
                 this.pedigree.text = newdata.text;
                 this.pedigree.y = 1;
                 this.pedigree.x = -1;
+                this.pedigree.setName(filename);
 
                 this.container.innerHTML = "";
                 this.replot();
@@ -199,13 +246,15 @@ Vue.component("pedigree-ui", {
         createNewPedigree: function() {
             this.pedigree = new pedigree.Pedigree();
             this.container.innerHTML = "";
+            this.setFilename(null);
             this.init();
         },
         promptForNewPedigree: function() {
             if (!this.pedigree.dirty) {
                 this.createNewPedigree();
+                return;
             }
-            pedigree.yesNoDialog(
+            dialogs.yesNoDialog(
                 "Clear this pedigree and start a new one?",
                 "Start New Pedigree",
                 "Cancel",
@@ -637,6 +686,7 @@ Vue.component("pedigree-ui", {
             }
         },
         run: function() {
+            this.filename = null;
             this.init();
 
             var keydownMap = {

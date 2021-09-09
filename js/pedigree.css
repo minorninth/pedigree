@@ -562,8 +562,13 @@ body {
 
 .dialog textarea,
 button,
-input {
+input,
+select {
     margin-top: 1em;
+}
+
+.dialog select {
+    margin-bottom: 1em;
 }
 
 .dialog textarea {
