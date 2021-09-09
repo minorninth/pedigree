@@ -201,10 +201,11 @@ Vue.component("pedigree-ui", {
                 }
 
                 let item = JSON.parse(localStorage.getItem(key));
-                if (item.type == 'pedigree' && item.data && item.data.data['1']) {
-                    recents.push({ key: key, name: item.name });
+                if (item.type == 'pedigree' && item.data && item.data.data['1'].length) {
+                    recents.push({ key: key, name: item.name, time: item.time });
                 }
             }
+            recents.sort((a, b) => (a.time > b.time) ? -1 : 1);
 
             dialogs.loadDialog(recents, (filename, result) => {
                 this.setFilename(filename);

@@ -131,14 +131,6 @@ pedigree.Pedigree = function() {
 };
 
 pedigree.Pedigree.prototype.initStorage = function() {
-    let now = new Date();
-    this.storageKey = '' + now.getTime();
-    localStorage.setItem(this.storageKey, JSON.stringify({
-        'type': 'pedigree',
-        'time': now.getTime(),
-        'name': now.toDateString()
-    }));
-
     let historyCount = 0;
     let argmin = null;
     let min = null;
@@ -147,8 +139,14 @@ pedigree.Pedigree.prototype.initStorage = function() {
 
         let item = JSON.parse(localStorage.getItem(key));
         if (item.type != 'pedigree') {
-            return;
+            continue;
         }
+
+        if (item.data && item.data.data['1'].length == 0) {
+            localStorage.removeItem(key);
+            continue;
+        }
+
         historyCount++;
         if (min === null || item.time < min) {
             min = item.time;
@@ -158,6 +156,14 @@ pedigree.Pedigree.prototype.initStorage = function() {
     if (historyCount > 10) {
         localStorage.removeItem(argmin);
     }
+
+    let now = new Date();
+    this.storageKey = '' + now.getTime();
+    localStorage.setItem(this.storageKey, JSON.stringify({
+        'type': 'pedigree',
+        'time': now.getTime(),
+        'name': now.toDateString()
+    }));
 };
 
 pedigree.Pedigree.prototype.push = function(action, x, y) {
