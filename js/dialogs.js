@@ -15,7 +15,7 @@ dialogs.restoreFocusFromDialog = null;
 
 dialogs.createDialog = function() {
     var dialog = document.createElement('dialog');
-    dialog.setAttribute('role', 'alertdialog');
+    dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-labelledby', 'dialogtitle');
     dialog.className = 'dialog';
     document.body.appendChild(dialog);
@@ -250,6 +250,11 @@ dialogs.coordinatesDialog = function(
 dialogs.loadDialog = function(recents, callback) {
     var dialog = dialogs.createDialog();
 
+    var dialogTitle = document.createElement('h2');
+    dialogTitle.innerText = 'Load Pedigree';
+    dialogTitle.id = 'dialogtitle';
+    dialog.appendChild(dialogTitle);
+
     var textLabel = document.createElement('label');
     dialog.appendChild(textLabel);
 
@@ -281,7 +286,7 @@ dialogs.loadDialog = function(recents, callback) {
             o.innerText = recents[i].name;
             select.appendChild(o);
         }
-        dialog.appendChild(select);
+        selectLabel.appendChild(select);
     }
 
     var buttonRow = document.createElement('div');
