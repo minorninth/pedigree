@@ -114,7 +114,7 @@ Vue.component("pedigree-ui", {
             } catch (e) {
                 console.log("Replot recover because " + e.message);
                 this.recover();
-                if (e instanceof PedigreeException) {
+                if (e.message) {
                     dialogs.messageDialog(e.message);
                 } else {
                     throw e;
@@ -679,7 +679,7 @@ Vue.component("pedigree-ui", {
             } catch (e) {
                 console.log("executeCommand recover because " + e.message);
                 this.recover();
-                if (e instanceof PedigreeException) {
+                if (e.message) {
                     dialogs.messageDialog(e.message);
                 } else {
                     throw e;
@@ -1155,6 +1155,7 @@ Vue.component("pedigree-ui", {
                 this.footer = document.getElementById("footer");
 
                 window.out = function(msg) {
+                    console.log('OUT: ' + msg);
                     window.clearTimeout(window.lastFooterTimeoutId);
                     window.setTimeout(function() {
                         footer.innerHTML = msg;
@@ -1164,7 +1165,7 @@ Vue.component("pedigree-ui", {
                     }, 100);
                 };
 
-                pedigree.restoreFocusFromDialog = () => {
+                dialogs.restoreFocusFromDialog = () => {
                     try {
                         this.getElement(this.pedigree.x, this.pedigree.y).focus();
                     } catch (x) {}

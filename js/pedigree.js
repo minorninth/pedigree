@@ -20,10 +20,6 @@ function assertEquals(s1, s2) {
     }
 }
 
-function out(s) {
-    console.log(s);
-};
-
 var VERBOSE = false;
 
 function verbose(s) {
@@ -184,6 +180,7 @@ pedigree.Pedigree.prototype.push = function(action, x, y) {
     item.data = this.serialize();
     localStorage.setItem(this.storageKey, JSON.stringify(item));
 
+    out(action);
     console.log('PUSH "' + action + '": length=' + this.undo_history.length + ': ' +
         this.describe_all());
 };
