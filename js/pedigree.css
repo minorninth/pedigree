@@ -366,6 +366,7 @@ body {
     font-family: arial, helvetica, sans-serif;
     font-size: 10pt;
     text-align: center;
+    white-space: pre;
 }
 
 .pedigree .row * {

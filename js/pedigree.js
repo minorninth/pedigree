@@ -113,7 +113,12 @@ pedigree.State = function(action, data, unions, x0, y0, text) {
 };
 
 pedigree.Pedigree = function() {
-    this.text = 'Pedigree Title';
+    this.text =
+        'Medical Record Number:\n' +
+        'Lucile Salter Packard Children’s Hospital\n' +
+        'STANFORD UNIVERSITY MEDICAL CENTER  |  725 Welch Road, Palo Alto, CA 94304\n' +
+        'PEDIGREE/FAMILY HISTORY\n' +
+        'Patient Name:';
     this.data = {};
     this.data[1] = [];
     this.unions = [];
@@ -1012,6 +1017,8 @@ pedigree.Pedigree.prototype.textwidth = function(s) {
 };
 
 pedigree.Pedigree.prototype.splittext = function(text, max_width) {
+    if (text.indexOf('\n') >= 0)
+        return text.split('\n');
     var lines = [];
     var tokens = text.split(' ');
     var line = tokens.shift();
